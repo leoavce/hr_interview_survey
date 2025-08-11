@@ -8,7 +8,7 @@
   const successBox = document.getElementById('successBox');
   const submitBtn = document.getElementById('submitBtn');
 
-  // 세션 값 확인
+  // 세션 값
   const type = sessionStorage.getItem('applyType');
   const name = sessionStorage.getItem('applyName');
   const birth = sessionStorage.getItem('applyBirth');
@@ -19,7 +19,7 @@
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent = `${name} (${birth}) · ${type}`;
 
-  // ====== 질문 정의 (이전 학습 내용 반영) ======
+  // ===== 질문 정의 =====
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -139,7 +139,7 @@
     });
   }
 
-  // 분류 로직
+  // 분류
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       A: [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -151,7 +151,7 @@
     surveyAnswers.forEach((ans, i) => {
       const q1 = i*2 + 1;
       const q2 = i*2 + 2;
-      const selected = ans === 1 ? q1 :  q2;
+      const selected = ans === 1 ? q1 : q2;
       for (const t in typeQuestions) {
         if (typeQuestions[t].includes(selected)) { scores[t]++; break; }
       }
@@ -168,30 +168,21 @@
 
   renderQuestions();
 
+  // ====== 제출 ======
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
 
-    // 버튼 상태
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = '제출 중...';
 
     try {
-      // 1) Firebase 준비 대기
-      if (!window.firebaseReadyPromise) {
-        throw new Error('Firebase 준비 Promise가 없습니다.');
-      }
-      await Promise.race([
-        window.firebaseReadyPromise,
-        new Promise((_, rej) => setTimeout(() => rej(new Error('Firebase 객체 준비 타임아웃')), 15000))
-      ]);
+      // (1) 이 페이지는 익명 허용
+      await ensureAuth({ anonymous: true });
+      if (!window.db || !window.storage) throw new Error('Firebase 객체가 준비되지 않았습니다.');
 
-      if (!window.db || !window.storage) {
-        throw new Error('Firebase 객체가 준비되지 않았습니다.');
-      }
-
-      // 2) 값 수집/검증
+      // (2) 값 수집/검증
       const essays = [];
       for (let i = 0; i < essayQuestions[type].length; i++) {
         const v = (surveyForm[`essay${i+1}`]?.value || '').trim();
@@ -206,7 +197,7 @@
         selects.push(parseInt(value, 10));
       }
 
-      // 3) 분류 및 Firestore 저장
+      // (3) 분류 + Firestore 저장
       const result = classifyType(selects);
       const docData = {
         type, name, birth,
@@ -215,23 +206,40 @@
         typeScores: result.scores,
         date: new Date().toISOString(),
       };
-
       const ref = await db.collection('responses').add(docData);
 
-      // 4) PDF 생성/업로드 (실패해도 제출은 성공 처리)
-      try {
+      // (4) PDF/Storage: 8초 타임아웃, 실패해도 진행
+      const uploadTask = (async () => {
+        const preview = document.getElementById('pdfPreview');
+        // 프리뷰 구성
         await buildPdfPreview(docData);
-        const pdfBlob = await generatePdfFromPreview();
+        // 캔버스 → PDF
+        const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const imgWidth = pageWidth - 40;
+        const ratio = canvas.height / canvas.width;
+        const imgHeight = imgWidth * ratio;
+        pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+        const blob = pdf.output('blob');
+
         const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
         const storageRef = storage.ref().child(`pdfs/${fileName}`);
-        await storageRef.put(pdfBlob, { contentType: 'application/pdf' });
+        await storageRef.put(blob, { contentType: 'application/pdf' });
         const pdfUrl = await storageRef.getDownloadURL();
         await db.collection('responses').doc(ref.id).update({ pdfUrl });
-      } catch (pdfErr) {
-        console.warn('PDF 생성/업로드 실패:', pdfErr);
-      }
+      })();
 
-      // 5) 완료 UI
+      await Promise.race([
+        uploadTask,
+        new Promise((_, rej) => setTimeout(() => rej(new Error('PDF 업로드 타임아웃')), 8000))
+      ]).catch(e => {
+        console.warn('PDF/Storage 스킵:', e.message);
+      });
+
+      // (5) 완료
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
 
@@ -243,7 +251,6 @@
     }
   });
 
-  // ===== PDF 유틸 =====
   async function buildPdfPreview(data){
     const summary = document.getElementById('pdfSummary');
     const answers = document.getElementById('pdfAnswers');
@@ -261,22 +268,7 @@
     html += `<div>${data.selects.map((v,i)=>`${i+1}:${v===1?'①':'②'}`).join(' · ')}</div>`;
     answers.innerHTML = html;
   }
-
   function escapeHtml(s){
     return s.replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-
-  async function generatePdfFromPreview(){
-    const preview = document.getElementById('pdfPreview');
-    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 40;
-    const ratio = canvas.height / canvas.width;
-    const imgHeight = imgWidth * ratio;
-    pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
-    return pdf.output('blob');
   }
 })();
