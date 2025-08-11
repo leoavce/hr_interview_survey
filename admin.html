@@ -1,27 +1,82 @@
-<!-- assets/admin.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>관리자 페이지</title>
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Firebase v8 로더 (이 페이지에서만 필요) --> <!-- 수정됨 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="js/firebase-init.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AhnLab 채용 관리자</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <h1>관리자 페이지</h1>
-  <form id="adminLogin" class="card"> <!-- 수정됨 -->
-    비밀번호: <input type="password" id="adminPw" required>
-    <button type="submit">로그인</button>
-  </form>
+  <!-- 로그인 화면 -->
+  <div class="login-container" id="loginContainer">
+    <div class="login-box card">
+      <h1>관리자 로그인</h1>
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" placeholder="비밀번호를 입력하세요"/>
+      </div>
+      <button class="login-btn" id="loginBtn">로그인</button>
+      <button class="back-btn" onclick="location.href='index.html'">홈으로 돌아가기</button>
+      <div class="error-message" id="loginError"></div>
+    </div>
+  </div>
 
-  <div id="adminPanel" style="display:none;" class="card"> <!-- 수정됨 -->
-    <h2>응답 현황</h2>
-    <div id="stats"></div>
-    <h2>응답 PDF 다운로드</h2>
-    <div id="pdfList"></div>
+  <!-- 대시보드 -->
+  <div class="dashboard" id="dashboard">
+    <div class="header card row between center">
+      <h1>AhnLab 채용 관리자 대시보드</h1>
+      <button class="logout-btn" id="logoutBtn">로그아웃</button>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <div class="stats grid-4">
+      <div class="stat-card card center">
+        <div class="stat-number" id="totalResponses">0</div>
+        <div class="stat-label">총 응답수</div>
+      </div>
+      <div class="stat-card card center">
+        <div class="stat-number" id="newEmployees">0</div>
+        <div class="stat-label">신입지원</div>
+      </div>
+      <div class="stat-card card center">
+        <div class="stat-number" id="experiencedEmployees">0</div>
+        <div class="stat-label">경력지원</div>
+      </div>
+      <div class="stat-card card center">
+        <div class="stat-number" id="todayResponses">0</div>
+        <div class="stat-label">오늘 응답</div>
+      </div>
+    </div>
+
+    <div class="section card">
+      <div class="section-header row between center">
+        <h2>최근 응답자 (5명)</h2>
+        <div>
+          <button class="refresh-btn" id="btnGenPDF">📄 PDF 생성</button>
+          <button class="refresh-btn" id="btnRefreshLatest">새로고침</button>
+        </div>
+      </div>
+      <div id="latestResponsesContent" class="table-wrap">
+        <div class="loading"><div class="spinner"></div><p>데이터를 불러오는 중...</p></div>
+      </div>
+    </div>
+
+    <div class="section card">
+      <div class="section-header row between center">
+        <h2>전체 응답자 <span class="muted small">(최대 30명까지 저장)</span></h2>
+        <button class="refresh-btn" id="btnRefreshAll">새로고침</button>
+      </div>
+
+      <div id="storageInfo" class="info-strip">
+        <strong>📊 저장소 정보:</strong> <span id="storageStatus">데이터 로딩 중...</span>
+      </div>
+
+      <div id="allResponsesContent" class="table-wrap">
+        <div class="loading"><div class="spinner"></div><p>데이터를 불러오는 중...</p></div>
+      </div>
+    </div>
   </div>
 
   <script src="js/admin.js"></script>
