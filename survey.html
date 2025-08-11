@@ -1,23 +1,54 @@
-<!-- assets/survey.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>설문 응답</title>
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Firebase v8 로더 (이 페이지에서만 필요) --> <!-- 수정됨 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="js/firebase-init.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AhnLab 채용 설문</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <h1 id="surveyTitle">설문 응답</h1>
-  <form id="surveyForm" class="card"> <!-- 수정됨: card 스타일 -->
-    <div id="questions"></div>
-    <button type="submit">제출</button>
-  </form>
+  <div class="container container-wide">
+    <div class="header card">
+      <h1>AhnLab 채용 설문</h1>
+      <div class="candidate-info" id="candidateInfo">로딩 중...</div>
+      <div class="message">
+        안랩에 지원해주신 지원자님께 감사의 말씀을 전해드립니다.<br/>
+        다음의 설문에 진실되게 응답해주시면 감사드리겠습니다.
+      </div>
+    </div>
 
-  <!-- 설문 스크립트 -->
+    <div id="errorMessage" class="error-message" style="display:none;"></div>
+
+    <div id="successMessage" class="success-message" style="display:none;">
+      <h3>✅ 제출 완료</h3>
+      <p>설문에 응답해주셔서 감사합니다.</p>
+      <button class="submit-btn" onclick="goHome()" style="margin-top:1rem;">홈으로 이동</button>
+    </div>
+
+    <form id="surveyForm" style="display:none;">
+      <div class="form-section">
+        <h2>📝 서술형 질문 (<span id="shortCount">0</span>문항)</h2>
+        <div id="shortQuestions"></div>
+      </div>
+
+      <div class="form-section">
+        <h2>🔄 선택형 질문 (40쌍)</h2>
+        <p class="muted center">다음 각 문항에서 <strong>더 나와 가까운 문장 하나</strong>를 선택해주세요.</p>
+        <div id="choiceQuestions"></div>
+      </div>
+
+      <div class="form-section form-actions">
+        <button type="button" class="back-btn" onclick="goBack()">홈으로 돌아가기</button>
+        <button type="submit" class="submit-btn" id="submitBtn">설문 제출</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Firebase는 GitHub Pages 모드에서만 사용(fallback) -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  <script src="js/firebase-init.js"></script>
   <script src="js/survey.js"></script>
 </body>
 </html>
