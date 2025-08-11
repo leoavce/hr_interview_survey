@@ -11,14 +11,32 @@
   const listEl = document.getElementById('list');
   const logoutBtn = document.getElementById('logoutBtn');
 
+  // 방어: auth/db가 없으면 콘솔에 표시하고 로그인 폼 유지
+  if (!(window.firebase && window.auth && window.db)) {
+    console.error('Firebase 초기화가 이루어지지 않았습니다. 스크립트 순서를 확인하세요 (firebase-init.js → admin.js).');
+    // 로그인 폼은 기본 보임 상태라 추가 조치는 없음
+    return;
+  }
+
   // 로그인 상태 감시
   auth.onAuthStateChanged((user) => {
-    if (user && user.email) {
+    try {
+      // 익명 또는 미로그인 → 로그인폼
+      if (!user || user.isAnonymous || !user.email) {
+        adminPanel.style.display = 'none';
+        loginForm.style.display = 'block';
+        return;
+      }
+
       // 이메일/비번 로그인 사용자만 관리자 접근 허용
       loginForm.style.display = 'none';
       adminPanel.style.display = 'block';
-      loadStatsAndList().catch(console.error);
-    } else {
+      loadStatsAndList().catch((e) => {
+        console.error(e);
+        alert('응답 목록을 불러오지 못했습니다: ' + (e.message || e));
+      });
+    } catch (e) {
+      console.error('onAuthStateChanged 오류', e);
       adminPanel.style.display = 'none';
       loginForm.style.display = 'block';
     }
@@ -28,9 +46,9 @@
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.style.display = 'none';
+    const email = document.getElementById('adminEmail').value.trim();
+    const pw = document.getElementById('adminPw').value;
     try {
-      const email = document.getElementById('adminEmail').value.trim();
-      const pw = document.getElementById('adminPw').value;
       await auth.signInWithEmailAndPassword(email, pw);
     } catch (err) {
       loginError.textContent = err.message || '로그인 실패';
@@ -39,7 +57,9 @@
   });
 
   // 로그아웃
-  logoutBtn.addEventListener('click', () => auth.signOut());
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => auth.signOut());
+  }
 
   function todayISO(){
     const d = new Date();
@@ -53,7 +73,10 @@
   }
 
   async function loadStatsAndList() {
-    await ensureFirebaseReady(); // 안전하게
+    // 관리자 페이지는 익명로그인이 필요없지만, Firebase 준비 대기는 재사용
+    if (typeof ensureFirebaseReady === 'function') {
+      try { await ensureFirebaseReady(); } catch(_) {}
+    }
 
     const snap = await db.collection('responses').orderBy('date','desc').get();
     const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -66,9 +89,12 @@
 
     listEl.innerHTML = docs.map(doc => {
       const when = doc.date ? new Date(doc.date).toLocaleString('ko-KR') : '-';
-      const pdfBtn = (window.USE_STORAGE && doc.pdfUrl)
+      // Storage OFF이면 업로드 대신 'PDF 생성(다운로드)'로 동작
+      const canViewUrl = window.USE_STORAGE && doc.pdfUrl;
+      const btnHtml = canViewUrl
         ? `<a class="btn small" href="${doc.pdfUrl}" target="_blank" rel="noopener">PDF</a>`
         : `<button class="btn small outline" data-generate="${doc.id}">${window.USE_STORAGE ? 'PDF 업로드' : 'PDF 생성'}</button>`;
+
       return `
         <div class="row item">
           <div class="col">
@@ -76,23 +102,22 @@
             <div class="meta">${when} · <span class="badge small">${escapeHtml(doc.type)}</span> · 결과: ${escapeHtml(doc.resultType||'')}</div>
           </div>
           <div class="col actions">
-            ${pdfBtn}
+            ${btnHtml}
           </div>
         </div>
       `;
     }).join('');
 
-    // 버튼 이벤트
+    // PDF 버튼(생성/업로드) 이벤트
     listEl.querySelectorAll('button[data-generate]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-generate');
         const doc = docs.find(d => d.id === id);
         if (!doc) return;
-        try {
-          btn.disabled = true;
-          const old = btn.textContent;
-          btn.textContent = '생성 중...';
 
+        const old = btn.textContent;
+        btn.disabled = true; btn.textContent = '생성 중...';
+        try {
           const blob = await generatePdfFromDoc(doc);
 
           if (window.USE_STORAGE) {
@@ -111,18 +136,17 @@
             a.click();
             URL.revokeObjectURL(url);
           }
-
+        } catch (e) {
+          alert('PDF 생성 실패: ' + (e.message || e));
+        } finally {
           btn.textContent = old;
           btn.disabled = false;
-        } catch (e) {
-          btn.disabled = false;
-          alert('PDF 생성 실패: ' + (e.message || e));
         }
       });
     });
   }
 
-  // 관리자 측 PDF 생성 (브라우저 내 캡처)
+  // 관리자 측 PDF 생성
   async function generatePdfFromDoc(data) {
     const temp = document.createElement('div');
     temp.style.position = 'absolute';
