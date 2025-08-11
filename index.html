@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>인사 설문 지원</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  <script src="js/firebase-init.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+  <h1>지원 유형 선택</h1>
+  <form id="applyForm">
+    <label><input type="radio" name="type" value="신입" required> 신입</label>
+    <label><input type="radio" name="type" value="경력"> 경력</label><br>
+    이름: <input type="text" name="name" required><br>
+    생년월일: <input type="date" name="birth" required><br>
+    <button type="submit">지원하기</button>
+  </form>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>관리자 페이지</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/admin.js"></script>
+</head>
+<body>
+  <h1>관리자 페이지</h1>
+  <form id="adminLogin">
+    비밀번호: <input type="password" id="adminPw" required>
+    <button type="submit">로그인</button>
+  </form>
+  <div id="adminPanel" style="display:none;">
+    <h2>응답 현황</h2>
+    <div id="stats"></div>
+    <h2>응답 PDF 다운로드</h2>
+    <div id="pdfList"></div>
+  </div>
+</body>
+</html>
