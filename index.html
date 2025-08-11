@@ -1,39 +1,57 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>인사 설문 지원</title>
-  <link rel="stylesheet" href="css/style.css">
-  <!-- 이 페이지는 Firebase 불필요 -->
-  <script defer src="js/main.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AhnLab 채용 설문</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <h1>지원 유형 선택</h1>
+  <div class="container">
+    <h1 class="title">AhnLab 채용 설문</h1>
 
-  <form id="applyForm" class="card" novalidate>
-    <div>
-      <label style="display:block; font-weight:600; margin-bottom:6px;">지원 유형</label>
-      <div class="radio-group">
-        <label class="radio-item">
-          <input type="radio" name="type" value="신입" required>
-          <span>신입</span>
-        </label>
-        <label class="radio-item">
-          <input type="radio" name="type" value="경력">
-          <span>경력</span>
-        </label>
+    <div class="candidate-type-selection">
+      <h2>지원 유형을 선택하세요</h2>
+      <div class="type-buttons">
+        <button class="type-btn" data-type="신입지원" id="btnNew">신입 지원</button>
+        <button class="type-btn" data-type="경력지원" id="btnExp">경력 지원</button>
+      </div>
+      <div class="admin-login">
+        <button class="admin-btn" onclick="location.href='admin.html'">관리자 로그인</button>
       </div>
     </div>
 
-    <label for="name">이름:</label>
-    <input id="name" type="text" name="name" required placeholder="이름을 입력하세요">
+    <div class="user-info" id="userInfoBox">
+      <h3>기본 정보 입력</h3>
 
-    <label for="birth">생년월일:</label>
-    <input id="birth" type="date" name="birth" required>
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" placeholder="이름을 입력하세요" required>
+      </div>
 
-    <button type="submit">지원하기</button>
+      <div class="form-group">
+        <label for="birthDate">생년월일</label>
+        <input
+          type="text"
+          id="birthDate"
+          inputmode="numeric"
+          maxlength="8"
+          placeholder="YYYYMMDD (예: 19900101)"
+          required
+        >
+      </div>
 
-    <p id="formError" style="color:#e74c3c; margin-top:8px;"></p>
-  </form>
+      <button class="start-btn" id="startBtn" disabled>응답 시작하기</button>
+
+      <div class="error-message" id="errorMessage"></div>
+      <div class="loading" id="loading" style="display:none;">
+        <div class="spinner"></div>
+        <p>설문을 준비하는 중...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
 </body>
 </html>
