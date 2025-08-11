@@ -3,52 +3,57 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AhnLab 채용 설문</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <title>설문 응답</title>
   <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- Firebase -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+
+  <!-- PDF: jsPDF + html2canvas (한글은 캔버스로 이미지화하여 PDF에 삽입) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- 앱 초기화 -->
+  <script defer src="js/firebase-init.js"></script>
+
+  <!-- 페이지 스크립트 -->
+  <script defer src="js/survey.js"></script>
 </head>
-<body>
-  <div class="container container-wide">
-    <div class="header card">
-      <h1>AhnLab 채용 설문</h1>
-      <div class="candidate-info" id="candidateInfo">로딩 중...</div>
-      <div class="message">
-        안랩에 지원해주신 지원자님께 감사의 말씀을 전해드립니다.<br/>
-        다음의 설문에 진실되게 응답해주시면 감사드리겠습니다.
-      </div>
+<body class="bg">
+  <div class="container card">
+    <div class="header">
+      <h1 id="surveyTitle" class="title">설문 응답</h1>
+      <div class="badge" id="candidateInfo">로딩 중...</div>
+      <p class="desc">
+        진실된 응답을 부탁드립니다. 선택형은 각 문항에서 <strong>더 나와 가까운 문장 하나</strong>를 선택해주세요.
+      </p>
     </div>
 
-    <div id="errorMessage" class="error-message" style="display:none;"></div>
+    <form id="surveyForm" class="section" novalidate>
+      <div id="questions"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary" id="submitBtn">설문 제출</button>
+      </div>
+      <div id="errorMessage" class="error" style="display:none;"></div>
+    </form>
 
-    <div id="successMessage" class="success-message" style="display:none;">
+    <!-- 제출 완료 메시지 -->
+    <div id="successBox" class="success" style="display:none;">
       <h3>✅ 제출 완료</h3>
       <p>설문에 응답해주셔서 감사합니다.</p>
-      <button class="submit-btn" onclick="goHome()" style="margin-top:1rem;">홈으로 이동</button>
+      <button class="btn" onclick="location.href='index.html'">홈으로 돌아가기</button>
     </div>
 
-    <form id="surveyForm" style="display:none;">
-      <div class="form-section">
-        <h2>📝 서술형 질문 (<span id="shortCount">0</span>문항)</h2>
-        <div id="shortQuestions"></div>
-      </div>
-
-      <div class="form-section">
-        <h2>🔄 선택형 질문 (40쌍)</h2>
-        <p class="muted center">다음 각 문항에서 <strong>더 나와 가까운 문장 하나</strong>를 선택해주세요.</p>
-        <div id="choiceQuestions"></div>
-      </div>
-
-      <div class="form-section form-actions">
-        <button type="button" class="back-btn" onclick="goBack()">홈으로 돌아가기</button>
-        <button type="submit" class="submit-btn" id="submitBtn">설문 제출</button>
-      </div>
-    </form>
+    <!-- PDF 렌더링을 위한 숨김 프리뷰(이미지로 캡처) -->
+    <div id="pdfPreview" class="pdf-preview" style="position:absolute; left:-9999px; top:-9999px; width:794px; padding:32px; background:#fff;">
+      <h2 style="margin:0 0 12px 0;">AhnLab 채용 응답서</h2>
+      <div id="pdfSummary" style="font-size:14px; line-height:1.6;"></div>
+      <hr style="margin:12px 0;">
+      <div id="pdfAnswers" style="font-size:12px;"></div>
+    </div>
   </div>
-
-  <!-- Firebase는 GitHub Pages 모드에서만 사용(fallback) -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-  <script src="js/firebase-init.js"></script>
-  <script src="js/survey.js"></script>
 </body>
 </html>
