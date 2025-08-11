@@ -1,16 +1,23 @@
+<!-- assets/survey.html -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <title>설문 응답</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="js/survey.js"></script>
+  <!-- Firebase v8 로더 (이 페이지에서만 필요) --> <!-- 수정됨 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="js/firebase-init.js"></script>
 </head>
 <body>
   <h1 id="surveyTitle">설문 응답</h1>
-  <form id="surveyForm">
+  <form id="surveyForm" class="card"> <!-- 수정됨: card 스타일 -->
     <div id="questions"></div>
     <button type="submit">제출</button>
   </form>
+
+  <!-- 설문 스크립트 -->
+  <script src="js/survey.js"></script>
 </body>
 </html>
