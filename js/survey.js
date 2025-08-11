@@ -6,38 +6,45 @@
   const infoEl = document.getElementById('candidateInfo');
   const errorEl = document.getElementById('errorMessage');
   const successBox = document.getElementById('successBox');
+  const submitBtn = document.getElementById('submitBtn');
 
-  // Firebase 준비 확인 유틸
-  function ensureFirebaseReady() {
-    return new Promise((resolve, reject) => {
-      let tries = 0;
-      const t = setInterval(() => {
-        tries++;
-        if (window.db && window.storage && window.auth) {
-          clearInterval(t);
-          resolve();
-        }
-        if (tries > 100) { // ~5초
-          clearInterval(t);
-          reject(new Error("Firebase 초기화 대기 시간 초과"));
-        }
-      }, 50);
-    });
+  // === 유틸: 준비 대기 ===
+  function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  async function ensureFirebaseReady(timeoutMs = 10000) {
+    const start = Date.now();
+    while (!(window.db && window.storage && window.auth)) {
+      if (Date.now() - start > timeoutMs) {
+        throw new Error("Firebase 객체 준비 타임아웃");
+      }
+      await wait(50);
+    }
   }
 
-  const type = sessionStorage.getItem('applyType');
-  const name = sessionStorage.getItem('applyName');
-  const birth = sessionStorage.getItem('applyBirth');
+  async function waitForAuthUser(timeoutMs = 12000) {
+    const start = Date.now();
+    while (true) {
+      const user = auth.currentUser;
+      if (user) return user;
+      if (Date.now() - start > timeoutMs) {
+        throw new Error("인증(로그인) 대기 타임아웃");
+      }
+      await wait(50);
+    }
+  }
 
+  // === 세션 파라미터 ===
+  const type  = sessionStorage.getItem('applyType');
+  const name  = sessionStorage.getItem('applyName');
+  const birth = sessionStorage.getItem('applyBirth');
   if (!type || !name || !birth) {
     location.href = 'index.html';
     return;
   }
-
   titleEl.textContent = `${type} 설문 응답`;
-  infoEl.textContent = `${name} (${birth}) · ${type}`;
+  infoEl.textContent  = `${name} (${birth}) · ${type}`;
 
-  // 서술형 질문
+  // === 질문 세트 ===
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -82,7 +89,6 @@
     ]
   };
 
-  // 선택형 40쌍
   const choicePairs = [
     ["나는 활동을 좋아한다.", "나는 문제를 체계적/조직적으로 다룬다."],
     ["나는 변화를 무척 좋아한다.", "나는 개인활동보다 팀 활동이 더 효과적이라고 믿는다."],
@@ -158,7 +164,6 @@
     });
   }
 
-  // 분류 로직
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -178,6 +183,7 @@
     });
     return scores;
   }
+
   function classifyType(surveyAnswers){
     const scores = getTypeScores(surveyAnswers);
     const max = Math.max(scores.A, scores.B, scores.C, scores.D);
@@ -194,15 +200,23 @@
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
-    const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = '제출 중...';
+    console.log("[submit] 제출 시작");
 
     try {
-      // Firebase 준비 대기 (auth/db/storage)
+      console.log("[submit] Firebase 준비 대기");
       await ensureFirebaseReady();
+      console.log("[submit] 인증 대기");
+      // firebase-init.js가 만들어 둔 Promise도 함께 대기
+      if (window.__AUTH_READY__) {
+        await Promise.race([window.__AUTH_READY__, waitForAuthUser()]);
+      } else {
+        await waitForAuthUser();
+      }
+      console.log("[submit] 인증 OK uid =", auth.currentUser?.uid);
 
-      // 수집
+      // 값 수집/검증
       const essays = [];
       const essayLen = essayQuestions[type].length;
       for(let i=0;i<essayLen;i++){
@@ -212,7 +226,8 @@
       }
       const selects = [];
       for(let i=0;i<40;i++){
-        const v = surveyForm[`select${i+1}`]?.value;
+        const field = surveyForm[`select${i+1}`];
+        const v = field?.value;
         if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
         selects.push(parseInt(v,10));
       }
@@ -220,23 +235,22 @@
       // 분류
       const result = classifyType(selects);
 
-      // 저장 데이터
       const docData = {
-        type,
-        name,
-        birth,
-        essays,
-        selects,
+        type, name, birth,
+        essays, selects,
         resultType: result.label,
         typeScores: result.scores,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        uid: auth.currentUser?.uid || null
       };
 
-      // ✅ Firestore 저장 (인증 실패/보안규칙 오류도 여기서 잡힘)
+      console.log("[submit] Firestore add 시작");
       const ref = await db.collection('responses').add(docData);
+      console.log("[submit] Firestore add 성공, id =", ref.id);
 
-      // PDF 생성/업로드 (실패해도 제출은 성공 처리)
+      // PDF는 실패해도 제출 성공 처리
       try {
+        console.log("[submit] PDF 생성 시작");
         await buildPdfPreview(docData);
         const pdfBlob = await generatePdfFromPreview();
         const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
@@ -244,16 +258,17 @@
         await storageRef.put(pdfBlob, { contentType: 'application/pdf' });
         const pdfUrl = await storageRef.getDownloadURL();
         await db.collection('responses').doc(ref.id).update({ pdfUrl });
+        console.log("[submit] PDF 업로드/URL 저장 완료");
       } catch (pdfErr) {
-        console.warn('PDF 생성/업로드 실패:', pdfErr);
+        console.warn("[submit] PDF 실패(무시):", pdfErr);
       }
 
-      // 완료 표시
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
+      console.log("[submit] 제출 완료 UI 표시");
 
     } catch (err) {
-      console.error(err);
+      console.error("[submit] 실패:", err);
       errorEl.textContent = `제출 중 오류가 발생했습니다: ${err.message || err}`;
       errorEl.style.display = 'block';
       submitBtn.disabled = false;
@@ -269,7 +284,9 @@
       <div><strong>생년월일:</strong> ${data.birth}</div>
       <div><strong>지원유형:</strong> ${data.type}</div>
       <div><strong>제출일:</strong> ${data.date.slice(0,10)}</div>
-      <div><strong>유형 결과:</strong> ${data.resultType} (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})</div>
+      <div><strong>유형 결과:</strong> ${data.resultType}
+        (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})
+      </div>
     `;
     let html = `<h3 style="margin:12px 0 6px 0;">서술형 답변</h3>`;
     data.essays.forEach((t,i)=>{
@@ -291,7 +308,7 @@
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 40; // 좌우 20pt 여백
+    const imgWidth = pageWidth - 40;
     const ratio = canvas.height / canvas.width;
     const imgHeight = imgWidth * ratio;
     pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
