@@ -1,8 +1,8 @@
 // js/firebase-init.js
-// Firebase 초기화 + 익명 로그인 + Firestore/Storage 준비 완료 Promise
+// Firebase 초기화 + 페이지별로 선택적 인증(익명/이메일) 제어
 
 (function () {
-  // TODO: 본인 프로젝트 값으로 교체
+  // ======== 1) 본인 프로젝트 설정으로 교체 ========
   const firebaseConfig = {
     apiKey: "AIzaSyBTd07lQmaMleeNMo_3VXrxZtAdbw-AXlU",
     authDomain: "hrsurvey-dfd9a.firebaseapp.com",
@@ -10,59 +10,87 @@
     storageBucket: "hrsurvey-dfd9a.firebasestorage.app",
     appId: "1:440188138119:web:c0b798ec7049380151fe22",
   };
+  // ==============================================
 
-  // 콘솔 로깅 헬퍼
-  const log = (...args) => console.log("[firebase-init]", ...args);
-  const warn = (...args) => console.warn("[firebase-init]", ...args);
-  const err = (...args) => console.error("[firebase-init]", ...args);
+  const log = (...a) => console.log("[firebase-init]", ...a);
+  const err = (...a) => console.error("[firebase-init]", ...a);
 
-  // 중복 초기화 방지
+  // 앱 초기화 (중복 방지)
   try {
     if (!firebase.apps || firebase.apps.length === 0) {
       firebase.initializeApp(firebaseConfig);
-      log("initializeApp 완료");
+      log("initializeApp OK");
     } else {
-      log("이미 초기화된 앱 사용");
+      log("use existing app");
     }
   } catch (e) {
-    err("initializeApp 오류", e);
+    err("initializeApp error", e);
   }
 
-  // 전역 Promise: Firebase 준비 완료 시 resolve
-  const readyPromise = new Promise((resolve, reject) => {
-    const timeoutMs = 15000; // 15초
-    const timer = setTimeout(() => {
-      err("Firebase 준비 타임아웃");
-      reject(new Error("Firebase 준비 타임아웃"));
-    }, timeoutMs);
+  // 전역 캐시
+  let readyOnce = null;
 
-    // 인증 상태 감시
-    firebase.auth().onAuthStateChanged(async (user) => {
-      try {
-        if (!user) {
-          log("사용자 없음 → 익명 로그인 시도");
-          await firebase.auth().signInAnonymously();
-          log("익명 로그인 성공");
-          return; // onAuthStateChanged가 다시 호출됨
+  /**
+   * 페이지에서 호출: 인증 보장
+   *  options = { anonymous: true|false }
+   *    - anonymous=true  : 익명 허용(필요 시 자동 로그인)
+   *    - anonymous=false : 익명 금지(관리자 페이지 등)
+   */
+  async function ensureAuth(options = { anonymous: true }) {
+    // 최초 준비 Promise 생성(앱/서비스 준비)
+    if (!readyOnce) {
+      readyOnce = new Promise((resolve, reject) => {
+        try {
+          // 일단 서비스 핸들러를 만들어 둠
+          window.db = firebase.firestore();
+          window.storage = firebase.storage();
+          resolve();
+        } catch (e) {
+          reject(e);
         }
+      });
+    }
+    await readyOnce;
 
-        // Firestore/Storage 객체 생성
-        window.db = firebase.firestore();
-        window.storage = firebase.storage();
-        window.firebaseReady = true;
+    const auth = firebase.auth();
 
-        clearTimeout(timer);
-        document.dispatchEvent(new Event("firebase-ready"));
-        log("Firestore/Storage 준비 완료");
-        resolve();
-      } catch (e) {
-        clearTimeout(timer);
-        err("인증/준비 중 오류", e);
-        reject(e);
-      }
-    });
-  });
+    // 현재 유저
+    const current = auth.currentUser;
 
-  // 전역으로 노출
-  window.firebaseReadyPromise = readyPromise;
+    if (current) {
+      // 이미 로그인(익명/이메일) 상태면 그대로 사용
+      return current;
+    }
+
+    // 아직 유저가 없으면… 옵션에 맞게
+    if (options.anonymous) {
+      // 설문 등: 익명 로그인 허용
+      await auth.signInAnonymously();
+      log("signed in anonymously");
+      return auth.currentUser;
+    } else {
+      // 관리자 등: 익명 로그인 금지 → 유저가 없으면 그대로 반환(로그인 페이지가 처리)
+      log("no user; anonymous disabled (waiting for email login)");
+      return null;
+    }
+  }
+
+  // 유틸: 이메일 로그인/로그아웃 (관리자 페이지에서 씀)
+  async function emailSignIn(email, password) {
+    // 혹시 익명 세션이 있으면 먼저 로그아웃
+    if (firebase.auth().currentUser && firebase.auth().currentUser.isAnonymous) {
+      await firebase.auth().signOut();
+    }
+    const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+    return cred.user;
+  }
+
+  async function signOut() {
+    await firebase.auth().signOut();
+  }
+
+  // 전역 export
+  window.ensureAuth = ensureAuth;
+  window.emailSignIn = emailSignIn;
+  window.firebaseSignOut = signOut;
 })();
