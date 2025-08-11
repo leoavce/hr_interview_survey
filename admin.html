@@ -12,7 +12,7 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
-  <!-- PDF libs (관리자도 브라우저에서 생성/다운로드 가능) -->
+  <!-- PDF libs -->
   <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -24,21 +24,21 @@
   <div class="container card">
     <h1 class="title">AhnLab 채용 관리자</h1>
 
-    <!-- 로그인 -->
-    <form id="adminLogin" class="section" style="display:none;">
+    <!-- (기본값: 보이도록) 로그인 -->
+    <form id="adminLogin" class="section">
       <div class="form-group">
         <label>이메일</label>
-        <input type="email" id="adminEmail" required/>
+        <input type="email" id="adminEmail" autocomplete="username" required/>
       </div>
       <div class="form-group">
         <label>비밀번호</label>
-        <input type="password" id="adminPw" required/>
+        <input type="password" id="adminPw" autocomplete="current-password" required/>
       </div>
       <button class="btn primary" type="submit">로그인</button>
       <div id="loginError" class="error" style="display:none;"></div>
     </form>
 
-    <!-- 대시보드 -->
+    <!-- 대시보드 (기본값: 숨김) -->
     <div id="adminPanel" style="display:none;">
       <div class="section stats">
         <div>총 응답: <strong id="totalCount">0</strong></div>
