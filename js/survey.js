@@ -8,18 +8,19 @@
   const successBox = document.getElementById('successBox');
   const submitBtn = document.getElementById('submitBtn');
 
-  // 세션 값
   const type = sessionStorage.getItem('applyType');
   const name = sessionStorage.getItem('applyName');
   const birth = sessionStorage.getItem('applyBirth');
+
   if (!type || !name || !birth) {
     location.href = 'index.html';
     return;
   }
+
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent = `${name} (${birth}) · ${type}`;
 
-  // ===== 질문 정의 =====
+  // ── 설문 문항 (이전 학습본 반영) ───────────────────────────────
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -107,6 +108,7 @@
     ["간결하고 핵심을 찌르는 말을 좋아한다.", "자신에 대해 자신감이 있다."]
   ];
 
+  // ── 렌더 ───────────────────────────────────────────────
   function renderQuestions() {
     // 서술형
     essayQuestions[type].forEach((q, i) => {
@@ -139,136 +141,151 @@
     });
   }
 
-  // 분류
+  // ── 분류 로직 ──────────────────────────────────────────
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
-      A: [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
-      B: [2,8,10,14,18,23,25,30,34,37,42,47,51,55,58,62,66,69,75,77],
-      C: [4,5,12,16,19,22,27,29,36,38,43,46,49,56,59,64,68,72,76,80],
-      D: [3,6,11,15,20,21,28,31,35,40,44,45,52,54,60,61,67,71,73,78],
+      "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
+      "B": [2,8,10,14,18,23,25,30,34,37,42,47,51,55,58,62,66,69,75,77],
+      "C": [4,5,12,16,19,22,27,29,36,38,43,46,49,56,59,64,68,72,76,80],
+      "D": [3,6,11,15,20,21,28,31,35,40,44,45,52,54,60,61,67,71,73,78]
     };
-    const scores = { A:0, B:0, C:0, D:0 };
+    const scores = {A:0,B:0,C:0,D:0};
     surveyAnswers.forEach((ans, i) => {
       const q1 = i*2 + 1;
       const q2 = i*2 + 2;
-      const selected = ans === 1 ? q1 : q2;
-      for (const t in typeQuestions) {
-        if (typeQuestions[t].includes(selected)) { scores[t]++; break; }
+      const selected = ans === 1 ? q1 : ans === 2 ? q2 : null;
+      if(!selected) return;
+      for(const t in typeQuestions){
+        if(typeQuestions[t].includes(selected)){ scores[t]++; break; }
       }
     });
     return scores;
   }
   function classifyType(surveyAnswers){
-    const s = getTypeScores(surveyAnswers);
-    const max = Math.max(s.A, s.B, s.C, s.D);
-    if(max === 0) return {label:'균형형', scores:s};
-    for (const t of ['A','B','C','D']) if (s[t] === max) return {label:`${t}형 (${s[t]}개)`, scores:s};
-    return {label:'균형형', scores:s};
+    const scores = getTypeScores(surveyAnswers);
+    const max = Math.max(scores.A, scores.B, scores.C, scores.D);
+    if(max === 0) return {label: '균형형', scores};
+    const order = ['A','B','C','D'];
+    for(const t of order){
+      if(scores[t] === max) return {label: `${t}형 (${scores[t]}개)`, scores};
+    }
+    return {label: '균형형', scores};
   }
 
   renderQuestions();
 
-  // ====== 제출 ======
+  // ── 제출 ───────────────────────────────────────────────
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
 
-    const originalText = submitBtn.textContent;
+    // 버튼 상태
     submitBtn.disabled = true;
+    const oldText = submitBtn.textContent;
     submitBtn.textContent = '제출 중...';
 
     try {
-      // (1) 이 페이지는 익명 허용
-      await ensureAuth({ anonymous: true });
-      if (!window.db || !window.storage) throw new Error('Firebase 객체가 준비되지 않았습니다.');
+      await ensureFirebaseReady();
 
-      // (2) 값 수집/검증
+      // 수집
       const essays = [];
-      for (let i = 0; i < essayQuestions[type].length; i++) {
-        const v = (surveyForm[`essay${i+1}`]?.value || '').trim();
-        if (!v) throw new Error(`서술형 ${i+1}번을 입력해주세요.`);
+      const essayLen = essayQuestions[type].length;
+      for(let i=0;i<essayLen;i++){
+        const v = surveyForm[`essay${i+1}`].value.trim();
+        if(!v){ throw new Error(`서술형 ${i+1}번을 입력해주세요.`); }
         essays.push(v);
       }
       const selects = [];
-      for (let i = 0; i < 40; i++) {
+      for(let i=0;i<40;i++){
         const field = surveyForm[`select${i+1}`];
-        const value = field && field.value;
-        if (!value) throw new Error(`선택형 ${i+1}번을 선택해주세요.`);
-        selects.push(parseInt(value, 10));
+        const v = field && field.value;
+        if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
+        selects.push(parseInt(v,10));
       }
 
-      // (3) 분류 + Firestore 저장
+      // 분류
       const result = classifyType(selects);
+
+      // 저장
       const docData = {
         type, name, birth,
         essays, selects,
         resultType: result.label,
         typeScores: result.scores,
-        date: new Date().toISOString(),
+        date: new Date().toISOString()
       };
       const ref = await db.collection('responses').add(docData);
 
-      // (4) PDF/Storage: 8초 타임아웃, 실패해도 진행
-      const uploadTask = (async () => {
-        const preview = document.getElementById('pdfPreview');
-        // 프리뷰 구성
+      // PDF 생성
+      try {
         await buildPdfPreview(docData);
-        // 캔버스 → PDF
-        const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
-        const imgData = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const imgWidth = pageWidth - 40;
-        const ratio = canvas.height / canvas.width;
-        const imgHeight = imgWidth * ratio;
-        pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
-        const blob = pdf.output('blob');
+        const pdfBlob = await generatePdfFromPreview();
 
-        const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
-        const storageRef = storage.ref().child(`pdfs/${fileName}`);
-        await storageRef.put(blob, { contentType: 'application/pdf' });
-        const pdfUrl = await storageRef.getDownloadURL();
-        await db.collection('responses').doc(ref.id).update({ pdfUrl });
-      })();
+        if (window.USE_STORAGE) {
+          const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
+          const storageRef = storage.ref().child(`pdfs/${fileName}`);
+          await storageRef.put(pdfBlob, { contentType: 'application/pdf' });
+          const pdfUrl = await storageRef.getDownloadURL();
+          await db.collection('responses').doc(ref.id).update({ pdfUrl });
+        } else {
+          // 업로드 없이 즉시 다운로드
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `응답_${name}_${type}.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch (err) {
+        console.warn('PDF 생성/업로드 실패:', err);
+        // PDF 실패해도 제출은 성공 처리
+      }
 
-      await Promise.race([
-        uploadTask,
-        new Promise((_, rej) => setTimeout(() => rej(new Error('PDF 업로드 타임아웃')), 8000))
-      ]).catch(e => {
-        console.warn('PDF/Storage 스킵:', e.message);
-      });
-
-      // (5) 완료
+      // 완료 표시
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
-
-    } catch (e2) {
-      errorEl.textContent = '제출 중 오류가 발생했습니다: ' + e2.message;
+    } catch (err) {
+      errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err.message || err);
       errorEl.style.display = 'block';
+    } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      submitBtn.textContent = oldText;
     }
   });
 
+  // ── PDF 프리뷰 구성 & 생성 ───────────────────────────────
   async function buildPdfPreview(data){
     const summary = document.getElementById('pdfSummary');
     const answers = document.getElementById('pdfAnswers');
     summary.innerHTML = `
-      <div><strong>이름:</strong> ${data.name}</div>
-      <div><strong>생년월일:</strong> ${data.birth}</div>
-      <div><strong>지원유형:</strong> ${data.type}</div>
+      <div><strong>이름:</strong> ${escapeHtml(data.name)}</div>
+      <div><strong>생년월일:</strong> ${escapeHtml(data.birth)}</div>
+      <div><strong>지원유형:</strong> ${escapeHtml(data.type)}</div>
       <div><strong>제출일:</strong> ${data.date.slice(0,10)}</div>
-      <div><strong>유형 결과:</strong> ${data.resultType}
-        (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})</div>
+      <div><strong>유형 결과:</strong> ${escapeHtml(data.resultType)} (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})</div>
     `;
     let html = `<h3 style="margin:12px 0 6px 0;">서술형 답변</h3>`;
-    data.essays.forEach((t,i)=>{ html += `<div style="margin-bottom:8px;"><strong>${i+1}.</strong> ${escapeHtml(t)}</div>`; });
+    data.essays.forEach((t,i)=>{
+      html += `<div style="margin-bottom:8px;"><strong>${i+1}.</strong> ${escapeHtml(t)}</div>`;
+    });
     html += `<h3 style="margin:12px 0 6px 0;">선택형 결과(1~40)</h3>`;
     html += `<div>${data.selects.map((v,i)=>`${i+1}:${v===1?'①':'②'}`).join(' · ')}</div>`;
     answers.innerHTML = html;
   }
   function escapeHtml(s){
-    return s.replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  async function generatePdfFromPreview(){
+    const preview = document.getElementById('pdfPreview');
+    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth - 40; // 좌우 여백
+    const ratio = canvas.height / canvas.width;
+    const imgHeight = imgWidth * ratio;
+    pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
+    return pdf.output('blob');
   }
 })();
