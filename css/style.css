@@ -1,8 +1,63 @@
-body { font-family: 'Noto Sans KR', Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+/* assets/css/style.css */
+
+/* 기본 */
+body {
+  font-family: 'Noto Sans KR', Arial, sans-serif;
+  background: #f7f7f7;
+  margin: 0;
+  padding: 0 16px;
+}
 h1 { color: #2c3e50; margin-top: 30px; }
-form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 400px; margin: 30px auto; }
-input, button, select { margin: 10px 0; padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
-button { background: #2980b9; color: #fff; border: none; cursor: pointer; }
+
+/* 카드 컨테이너 (공통) */ /* 수정됨 */
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  max-width: 720px; /* 설문은 좀 더 넓게 */ /* 수정됨 */
+  margin: 30px auto;
+}
+
+form input, form textarea, form button, form select {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d5dd;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+/* 버튼 */
+button {
+  background: #2980b9;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: .15s ease;
+}
 button:hover { background: #3498db; }
-#adminPanel { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+/* 관리자 전용 */
+#adminPanel { margin-top: 30px; }
 #stats, #pdfList { margin-top: 20px; }
+
+/* 설문 선택형 블록 */ /* 수정됨 */
+.choice-block {
+  border: 1px solid #eef0f3;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 10px 0;
+  background: #fafbfc;
+}
+.choice-title {
+  font-weight: 600; color: #2c3e50; margin-bottom: 8px;
+}
+.choice-options {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.choice-opt {
+  background: #fff; border: 1px solid #e3e7ee; border-radius: 6px; padding: 8px;
+}
+.choice-opt:hover { border-color: #2980b9; }
