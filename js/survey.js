@@ -7,9 +7,22 @@
   const errorEl = document.getElementById('errorMessage');
   const successBox = document.getElementById('successBox');
 
-  // 필수 전역 체크
-  if (typeof db === 'undefined' || typeof storage === 'undefined') {
-    console.error('Firebase 초기화 누락: db/storage가 없습니다. firebase-init.js와 로드 순서를 확인하세요.');
+  // Firebase 준비 확인 유틸
+  function ensureFirebaseReady() {
+    return new Promise((resolve, reject) => {
+      let tries = 0;
+      const t = setInterval(() => {
+        tries++;
+        if (window.db && window.storage && window.auth) {
+          clearInterval(t);
+          resolve();
+        }
+        if (tries > 100) { // ~5초
+          clearInterval(t);
+          reject(new Error("Firebase 초기화 대기 시간 초과"));
+        }
+      }, 50);
+    });
   }
 
   const type = sessionStorage.getItem('applyType');
@@ -24,7 +37,7 @@
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent = `${name} (${birth}) · ${type}`;
 
-  // ===== 서술형 질문 (학습된 전체 세트 유지) =====
+  // 서술형 질문
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -69,7 +82,7 @@
     ]
   };
 
-  // ===== 선택형 40쌍 (학습된 세트 유지) =====
+  // 선택형 40쌍
   const choicePairs = [
     ["나는 활동을 좋아한다.", "나는 문제를 체계적/조직적으로 다룬다."],
     ["나는 변화를 무척 좋아한다.", "나는 개인활동보다 팀 활동이 더 효과적이라고 믿는다."],
@@ -145,7 +158,7 @@
     });
   }
 
-  // ===== 분류 로직 (파이썬 포팅 유지) =====
+  // 분류 로직
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -181,45 +194,45 @@
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
-
-    // 수집
-    const essays = [];
-    const essayLen = essayQuestions[type].length;
-    for(let i=0;i<essayLen;i++){
-      const v = surveyForm[`essay${i+1}`].value.trim();
-      if(!v){ showError(`서술형 ${i+1}번을 입력해주세요.`); return; }
-      essays.push(v);
-    }
-    const selects = [];
-    for(let i=0;i<40;i++){
-      const rn = surveyForm[`select${i+1}`]; // RadioNodeList
-      const v = rn && rn.value;
-      if(!v){ showError(`선택형 ${i+1}번을 선택해주세요.`); return; }
-      selects.push(parseInt(v,10));
-    }
-
-    // 분류
-    const result = classifyType(selects);
-
-    // 저장 데이터
-    const docData = {
-      type,
-      name,
-      birth,
-      essays,
-      selects,
-      resultType: result.label,
-      typeScores: result.scores,
-      date: new Date().toISOString()
-    };
-
-    // 제출 버튼 잠금
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.textContent = '제출 중...';
 
     try {
-      // Firestore 저장
+      // Firebase 준비 대기 (auth/db/storage)
+      await ensureFirebaseReady();
+
+      // 수집
+      const essays = [];
+      const essayLen = essayQuestions[type].length;
+      for(let i=0;i<essayLen;i++){
+        const v = (surveyForm[`essay${i+1}`]?.value || "").trim();
+        if(!v){ throw new Error(`서술형 ${i+1}번을 입력해주세요.`); }
+        essays.push(v);
+      }
+      const selects = [];
+      for(let i=0;i<40;i++){
+        const v = surveyForm[`select${i+1}`]?.value;
+        if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
+        selects.push(parseInt(v,10));
+      }
+
+      // 분류
+      const result = classifyType(selects);
+
+      // 저장 데이터
+      const docData = {
+        type,
+        name,
+        birth,
+        essays,
+        selects,
+        resultType: result.label,
+        typeScores: result.scores,
+        date: new Date().toISOString()
+      };
+
+      // ✅ Firestore 저장 (인증 실패/보안규칙 오류도 여기서 잡힘)
       const ref = await db.collection('responses').add(docData);
 
       // PDF 생성/업로드 (실패해도 제출은 성공 처리)
@@ -240,17 +253,13 @@
       successBox.style.display = 'block';
 
     } catch (err) {
-      console.error('제출 오류:', err);
-      showError('제출 중 오류가 발생했습니다: ' + (err && err.message ? err.message : '알 수 없는 오류'));
+      console.error(err);
+      errorEl.textContent = `제출 중 오류가 발생했습니다: ${err.message || err}`;
+      errorEl.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = '설문 제출';
     }
   });
-
-  function showError(msg){
-    errorEl.textContent = msg;
-    errorEl.style.display = 'block';
-  }
 
   async function buildPdfPreview(data){
     const summary = document.getElementById('pdfSummary');
@@ -277,18 +286,14 @@
 
   async function generatePdfFromPreview(){
     const preview = document.getElementById('pdfPreview');
-    // A4 width ~ 794px (96DPI 기준)
     const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
     const imgData = canvas.toDataURL('image/png');
-
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-
     const pageWidth = pdf.internal.pageSize.getWidth();
     const imgWidth = pageWidth - 40; // 좌우 20pt 여백
     const ratio = canvas.height / canvas.width;
     const imgHeight = imgWidth * ratio;
-
     pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
     return pdf.output('blob');
   }
