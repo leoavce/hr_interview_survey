@@ -1,4 +1,5 @@
-// js/survey.js
+<!-- 파일: js/survey.js -->
+<script>
 (function () {
   const surveyForm = document.getElementById('surveyForm');
   const questionsDiv = document.getElementById('questions');
@@ -8,43 +9,19 @@
   const successBox = document.getElementById('successBox');
   const submitBtn = document.getElementById('submitBtn');
 
-  // === 유틸: 준비 대기 ===
-  function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-  async function ensureFirebaseReady(timeoutMs = 10000) {
-    const start = Date.now();
-    while (!(window.db && window.storage && window.auth)) {
-      if (Date.now() - start > timeoutMs) {
-        throw new Error("Firebase 객체 준비 타임아웃");
-      }
-      await wait(50);
-    }
-  }
-
-  async function waitForAuthUser(timeoutMs = 12000) {
-    const start = Date.now();
-    while (true) {
-      const user = auth.currentUser;
-      if (user) return user;
-      if (Date.now() - start > timeoutMs) {
-        throw new Error("인증(로그인) 대기 타임아웃");
-      }
-      await wait(50);
-    }
-  }
-
-  // === 세션 파라미터 ===
   const type  = sessionStorage.getItem('applyType');
   const name  = sessionStorage.getItem('applyName');
   const birth = sessionStorage.getItem('applyBirth');
+
   if (!type || !name || !birth) {
     location.href = 'index.html';
     return;
   }
+
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent  = `${name} (${birth}) · ${type}`;
 
-  // === 질문 세트 ===
+  // ====== 질문 세트 ======
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -164,6 +141,7 @@
     });
   }
 
+  // 유형 분류
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -183,7 +161,6 @@
     });
     return scores;
   }
-
   function classifyType(surveyAnswers){
     const scores = getTypeScores(surveyAnswers);
     const max = Math.max(scores.A, scores.B, scores.C, scores.D);
@@ -197,85 +174,77 @@
 
   renderQuestions();
 
+  // ====== 제출 처리 ======
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
     submitBtn.disabled = true;
-    submitBtn.textContent = '제출 중...';
-    console.log("[submit] 제출 시작");
+    submitBtn.textContent = '제출 중…';
 
     try {
-      console.log("[submit] Firebase 준비 대기");
-      await ensureFirebaseReady();
-      console.log("[submit] 인증 대기");
-      // firebase-init.js가 만들어 둔 Promise도 함께 대기
-      if (window.__AUTH_READY__) {
-        await Promise.race([window.__AUTH_READY__, waitForAuthUser()]);
-      } else {
-        await waitForAuthUser();
-      }
-      console.log("[submit] 인증 OK uid =", auth.currentUser?.uid);
+      // (1) 앱 준비(익명 로그인 완료) 대기
+      await window.appReady;
 
-      // 값 수집/검증
+      // (2) 응답 수집
       const essays = [];
       const essayLen = essayQuestions[type].length;
       for(let i=0;i<essayLen;i++){
-        const v = (surveyForm[`essay${i+1}`]?.value || "").trim();
+        const v = surveyForm[`essay${i+1}`].value?.trim() || '';
         if(!v){ throw new Error(`서술형 ${i+1}번을 입력해주세요.`); }
         essays.push(v);
       }
       const selects = [];
       for(let i=0;i<40;i++){
-        const field = surveyForm[`select${i+1}`];
-        const v = field?.value;
+        const nodeList = surveyForm.querySelectorAll(`input[name="select${i+1}"]:checked`);
+        const v = nodeList[0]?.value;
         if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
         selects.push(parseInt(v,10));
       }
 
-      // 분류
+      // (3) 분류
       const result = classifyType(selects);
 
+      // (4) Firestore 저장
       const docData = {
         type, name, birth,
         essays, selects,
         resultType: result.label,
         typeScores: result.scores,
-        date: new Date().toISOString(),
-        uid: auth.currentUser?.uid || null
+        submittedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      console.log("[submit] Firestore add 시작");
-      const ref = await db.collection('responses').add(docData);
-      console.log("[submit] Firestore add 성공, id =", ref.id);
+      const addRes = await window.db.collection('responses').add(docData);
+      console.log('[submit] Firestore add 성공:', addRes.id);
 
-      // PDF는 실패해도 제출 성공 처리
+      // (5) PDF 생성 & 업로드 (실패해도 제출은 성공 처리)
       try {
-        console.log("[submit] PDF 생성 시작");
-        await buildPdfPreview(docData);
+        await buildPdfPreview({
+          ...docData,
+          date: new Date().toISOString()
+        });
         const pdfBlob = await generatePdfFromPreview();
         const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
-        const storageRef = storage.ref().child(`pdfs/${fileName}`);
+        const storageRef = window.storage.ref().child(`pdfs/${fileName}`);
         await storageRef.put(pdfBlob, { contentType: 'application/pdf' });
         const pdfUrl = await storageRef.getDownloadURL();
-        await db.collection('responses').doc(ref.id).update({ pdfUrl });
-        console.log("[submit] PDF 업로드/URL 저장 완료");
+        await window.db.collection('responses').doc(addRes.id).update({ pdfUrl });
       } catch (pdfErr) {
-        console.warn("[submit] PDF 실패(무시):", pdfErr);
+        console.warn('PDF 생성/업로드 실패:', pdfErr);
       }
 
+      // (6) 완료 화면
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
-      console.log("[submit] 제출 완료 UI 표시");
-
     } catch (err) {
-      console.error("[submit] 실패:", err);
-      errorEl.textContent = `제출 중 오류가 발생했습니다: ${err.message || err}`;
+      console.error('[submit] 실패:', err);
+      errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err?.message || err);
       errorEl.style.display = 'block';
       submitBtn.disabled = false;
       submitBtn.textContent = '설문 제출';
     }
   });
 
+  // ====== PDF 유틸 ======
   async function buildPdfPreview(data){
     const summary = document.getElementById('pdfSummary');
     const answers = document.getElementById('pdfAnswers');
@@ -284,9 +253,7 @@
       <div><strong>생년월일:</strong> ${data.birth}</div>
       <div><strong>지원유형:</strong> ${data.type}</div>
       <div><strong>제출일:</strong> ${data.date.slice(0,10)}</div>
-      <div><strong>유형 결과:</strong> ${data.resultType}
-        (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})
-      </div>
+      <div><strong>유형 결과:</strong> ${data.resultType} (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})</div>
     `;
     let html = `<h3 style="margin:12px 0 6px 0;">서술형 답변</h3>`;
     data.essays.forEach((t,i)=>{
@@ -305,13 +272,17 @@
     const preview = document.getElementById('pdfPreview');
     const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
     const imgData = canvas.toDataURL('image/png');
+
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+
     const pageWidth = pdf.internal.pageSize.getWidth();
     const imgWidth = pageWidth - 40;
     const ratio = canvas.height / canvas.width;
     const imgHeight = imgWidth * ratio;
+
     pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
     return pdf.output('blob');
   }
 })();
+</script>
