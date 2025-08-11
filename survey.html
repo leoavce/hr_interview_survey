@@ -1,59 +1,50 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>설문 응답</title>
-  <link rel="stylesheet" href="css/style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css">
 
-  <!-- Firebase -->
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+  <!-- ✅ Firebase v9 compat로 통일 (로드 순서 중요: app -> firestore -> auth) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js" defer></script>
 
-  <!-- PDF: jsPDF + html2canvas (한글은 캔버스로 이미지화하여 PDF에 삽입) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- ✅ 우리 프로젝트 설정/초기화 -->
+  <script src="js/firebase-init.js" defer></script>
 
-  <!-- 앱 초기화 -->
-  <script defer src="js/firebase-init.js"></script>
+  <!-- ✅ 설문 로직 -->
+  <script src="js/survey.js" defer></script>
 
-  <!-- 페이지 스크립트 -->
-  <script defer src="js/survey.js"></script>
+  <style>
+    /* 작은 가시성 개선 */
+    #submitThanks{
+      display:none; margin:20px auto; max-width:700px;
+      background:#f0f9ff; border-left:4px solid #0ea5e9; padding:16px; border-radius:8px;
+    }
+    #submitError{
+      display:none; margin:20px auto; max-width:700px;
+      background:#fef2f2; border-left:4px solid #ef4444; padding:16px; border-radius:8px; color:#991b1b;
+    }
+    .hidden{display:none;}
+  </style>
 </head>
-<body class="bg">
-  <div class="container card">
-    <div class="header">
-      <h1 id="surveyTitle" class="title">설문 응답</h1>
-      <div class="badge" id="candidateInfo">로딩 중...</div>
-      <p class="desc">
-        진실된 응답을 부탁드립니다. 선택형은 각 문항에서 <strong>더 나와 가까운 문장 하나</strong>를 선택해주세요.
-      </p>
-    </div>
+<body>
+  <h1 id="surveyTitle">설문 응답</h1>
 
-    <form id="surveyForm" class="section" novalidate>
-      <div id="questions"></div>
-      <div class="form-actions">
-        <button type="submit" class="btn primary" id="submitBtn">설문 제출</button>
-      </div>
-      <div id="errorMessage" class="error" style="display:none;"></div>
-    </form>
+  <div id="submitError"></div>
 
-    <!-- 제출 완료 메시지 -->
-    <div id="successBox" class="success" style="display:none;">
-      <h3>✅ 제출 완료</h3>
-      <p>설문에 응답해주셔서 감사합니다.</p>
-      <button class="btn" onclick="location.href='index.html'">홈으로 돌아가기</button>
-    </div>
+  <form id="surveyForm">
+    <div id="questions"></div>
+    <!-- ✅ type="submit" 명시 + id 부여 -->
+    <button id="submitBtn" type="submit">제출</button>
+  </form>
 
-    <!-- PDF 렌더링을 위한 숨김 프리뷰(이미지로 캡처) -->
-    <div id="pdfPreview" class="pdf-preview" style="position:absolute; left:-9999px; top:-9999px; width:794px; padding:32px; background:#fff;">
-      <h2 style="margin:0 0 12px 0;">AhnLab 채용 응답서</h2>
-      <div id="pdfSummary" style="font-size:14px; line-height:1.6;"></div>
-      <hr style="margin:12px 0;">
-      <div id="pdfAnswers" style="font-size:12px;"></div>
-    </div>
+  <!-- ✅ 제출 완료 배너 -->
+  <div id="submitThanks">
+    <strong>설문에 응답해주셔서 감사합니다.</strong><br>
+    제출이 정상적으로 완료되었습니다.
   </div>
 </body>
 </html>
