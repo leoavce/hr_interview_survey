@@ -81,4 +81,38 @@ h2{margin:0 0 1rem; font-weight:600; color:#1d1d1f;}
 .choice-pair-header{font-weight:600; color:var(--primary); margin-bottom:1rem; text-align:center; font-size:.95rem;}
 .choice-options{display:grid; grid-template-columns:1fr 1fr; gap:1rem;}
 .choice-option{border:2px solid #e5e7eb; border-radius:6px; padding:1rem; cursor:pointer; transition:.2s; background:#fff;}
-.choice-option:hover{border-color:va
+.choice-option:hover{border-color:var(--primary); background:#f0f9ff;}
+.choice-option.selected{border-color:var(--primary); background:var(--primary); color:#fff;}
+.form-actions{display:flex; gap:12px; justify-content:flex-end;}
+.back-btn{background:#6b7280; color:white; border:none; padding:.75rem 1rem; border-radius:6px; cursor:pointer;}
+.back-btn:hover{background:#4b5563;}
+.success-message{background:#f0f9ff; color:#075985; border:1px solid #0ea5e9; border-radius:6px; padding:1.5rem; margin-bottom:1rem; text-align:center;}
+
+/* Admin */
+.login-container{min-height:100vh; display:flex; align-items:center; justify-content:center;}
+.login-box h1{margin-top:0; text-align:center;}
+.login-btn{background:var(--primary); color:white; border:none; padding:.8rem 1.2rem; border-radius:6px; width:100%;}
+.login-btn:hover{background:var(--primary-600);}
+.logout-btn{background:#e74c3c; color:#fff; border:none; padding:.6rem 1rem; border-radius:6px; cursor:pointer;}
+.logout-btn:hover{background:#c0392b;}
+.section{margin-bottom:30px;}
+.section-header{padding:10px 20px; border-bottom:1px solid #ecf0f1;}
+.refresh-btn{background:var(--primary); color:#fff; border:none; padding:.5rem .9rem; border-radius:6px; cursor:pointer;}
+.refresh-btn:hover{background:var(--primary-600);}
+.stats .stat-number{font-size:2rem; font-weight:700; color:#3498db;}
+.type-badge{padding:4px 8px; border-radius:12px; font-size:.8em; font-weight:600;}
+.type-신입지원{background:#e3f2fd; color:#1976d2;}
+.type-경력지원{background:#f3e5f5; color:#7b1fa2;}
+.result-badge{padding:4px 8px; border-radius:12px; font-size:.8em; font-weight:600; background:#f0f0f0; color:#333;}
+.table{width:100%; border-collapse:collapse;}
+.table th,.table td{padding:12px 14px; text-align:left; border-bottom:1px solid #ecf0f1;}
+.table th{background:#f8f9fa; font-weight:600; color:#2c3e50;}
+.pdf-btn{background:#27ae60; color:#fff; border:none; padding:.4rem .7rem; border-radius:6px; cursor:pointer; font-size:.85em;}
+.pdf-btn:hover{background:#229954;}
+.pagination{text-align:center; padding:16px;}
+.pagination button{background:var(--primary); color:#fff; border:none; padding:.45rem .8rem; margin:0 4px; border-radius:6px; cursor:pointer;}
+.pagination button:disabled{background:#bdc3c7; cursor:not-allowed;}
+.pagination .current{background:#27ae60;}
+.notification{background:#2ecc71; color:#fff; padding:12px; border-radius:8px; margin-bottom:16px; display:none;}
+.notification.show{display:block; animation:slideIn .3s ease;}
+@keyframes slideIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
