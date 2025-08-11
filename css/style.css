@@ -1,0 +1,8 @@
+body { font-family: 'Noto Sans KR', Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 0; }
+h1 { color: #2c3e50; margin-top: 30px; }
+form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 400px; margin: 30px auto; }
+input, button, select { margin: 10px 0; padding: 8px; border-radius: 4px; border: 1px solid #ccc; width: 100%; box-sizing: border-box; }
+button { background: #2980b9; color: #fff; border: none; cursor: pointer; }
+button:hover { background: #3498db; }
+#adminPanel { margin-top: 30px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+#stats, #pdfList { margin-top: 20px; }
