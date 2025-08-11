@@ -1,25 +1,32 @@
 /* assets/css/style.css */
 
-/* 기본 */
+/* ========== Base ========== */
 body {
   font-family: 'Noto Sans KR', Arial, sans-serif;
   background: #f7f7f7;
   margin: 0;
   padding: 0 16px;
 }
+
 h1 { color: #2c3e50; margin-top: 30px; }
 
-/* 카드 컨테이너 (공통) */ /* 수정됨 */
+/* ========== Card ========== */
 .card {
   background: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-  max-width: 720px; /* 설문은 좀 더 넓게 */ /* 수정됨 */
+  max-width: 720px;
   margin: 30px auto;
 }
 
-form input, form textarea, form button, form select {
+/* ========== Form controls (text/date/textarea/select/button만) ========== */
+form input[type="text"],
+form input[type="date"],
+form input[type="number"],
+form textarea,
+form select,
+form button {
   margin: 10px 0;
   padding: 10px 12px;
   border-radius: 6px;
@@ -39,11 +46,39 @@ button {
 }
 button:hover { background: #3498db; }
 
-/* 관리자 전용 */
+/* ========== Radio / Checkbox (width:100% 적용 금지) ========== */
+form input[type="radio"],
+form input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.radio-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px 16px;
+  margin: 8px 0 16px;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #e3e7ee;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+
+.radio-item input[type="radio"] {
+  transform: scale(1.1);
+}
+
+/* ========== Admin ========== */
 #adminPanel { margin-top: 30px; }
 #stats, #pdfList { margin-top: 20px; }
 
-/* 설문 선택형 블록 */ /* 수정됨 */
+/* ========== Survey blocks ========== */
 .choice-block {
   border: 1px solid #eef0f3;
   border-radius: 8px;
