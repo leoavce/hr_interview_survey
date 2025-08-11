@@ -12,14 +12,12 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
-  <!-- PDF: jsPDF + html2canvas (한글은 캔버스로 이미지화하여 PDF에 삽입) -->
+  <!-- PDF libs -->
   <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <!-- 앱 초기화 -->
+  <!-- 반드시 init → 페이지 스크립트 순 -->
   <script defer src="js/firebase-init.js"></script>
-
-  <!-- 페이지 스크립트 -->
   <script defer src="js/survey.js"></script>
 </head>
 <body class="bg">
@@ -40,15 +38,14 @@
       <div id="errorMessage" class="error" style="display:none;"></div>
     </form>
 
-    <!-- 제출 완료 메시지 -->
     <div id="successBox" class="success" style="display:none;">
       <h3>✅ 제출 완료</h3>
       <p>설문에 응답해주셔서 감사합니다.</p>
       <button class="btn" onclick="location.href='index.html'">홈으로 돌아가기</button>
     </div>
 
-    <!-- PDF 렌더링을 위한 숨김 프리뷰(이미지로 캡처) -->
-    <div id="pdfPreview" class="pdf-preview" style="position:absolute; left:-9999px; top:-9999px; width:794px; padding:32px; background:#fff;">
+    <!-- PDF 캡처용 숨김 프리뷰 -->
+    <div id="pdfPreview" style="position:absolute; left:-9999px; top:-9999px; width:794px; padding:32px; background:#fff;">
       <h2 style="margin:0 0 12px 0;">AhnLab 채용 응답서</h2>
       <div id="pdfSummary" style="font-size:14px; line-height:1.6;"></div>
       <hr style="margin:12px 0;">
