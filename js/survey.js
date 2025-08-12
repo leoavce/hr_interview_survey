@@ -1,4 +1,3 @@
-// js/survey.js
 (function () {
   const surveyForm = document.getElementById('surveyForm');
   const questionsDiv = document.getElementById('questions');
@@ -6,7 +5,6 @@
   const infoEl = document.getElementById('candidateInfo');
   const errorEl = document.getElementById('errorMessage');
   const successBox = document.getElementById('successBox');
-  const submitBtn = document.getElementById('submitBtn');
 
   const type = sessionStorage.getItem('applyType');
   const name = sessionStorage.getItem('applyName');
@@ -20,7 +18,7 @@
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent = `${name} (${birth}) · ${type}`;
 
-  // ── 설문 문항 (이전 학습본 반영) ───────────────────────────────
+  // 서술형 질문
   const essayQuestions = {
     '신입': [
       '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
@@ -65,6 +63,7 @@
     ]
   };
 
+  // 선택형 40쌍
   const choicePairs = [
     ["나는 활동을 좋아한다.", "나는 문제를 체계적/조직적으로 다룬다."],
     ["나는 변화를 무척 좋아한다.", "나는 개인활동보다 팀 활동이 더 효과적이라고 믿는다."],
@@ -108,7 +107,6 @@
     ["간결하고 핵심을 찌르는 말을 좋아한다.", "자신에 대해 자신감이 있다."]
   ];
 
-  // ── 렌더 ───────────────────────────────────────────────
   function renderQuestions() {
     // 서술형
     essayQuestions[type].forEach((q, i) => {
@@ -141,7 +139,7 @@
     });
   }
 
-  // ── 분류 로직 ──────────────────────────────────────────
+  // 분류 로직
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -174,31 +172,31 @@
 
   renderQuestions();
 
-  // ── 제출 ───────────────────────────────────────────────
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
 
-    // 버튼 상태
+    // 버튼 상태 변경
+    const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    const oldText = submitBtn.textContent;
+    const originalText = submitBtn.textContent;
     submitBtn.textContent = '제출 중...';
 
     try {
-      await ensureFirebaseReady();
+      // Firebase 준비(익명 인증)
+      await window.ensureFirebaseReady?.();
 
       // 수집
       const essays = [];
       const essayLen = essayQuestions[type].length;
       for(let i=0;i<essayLen;i++){
-        const v = surveyForm[`essay${i+1}`].value.trim();
+        const v = (surveyForm[`essay${i+1}`]?.value || '').trim();
         if(!v){ throw new Error(`서술형 ${i+1}번을 입력해주세요.`); }
         essays.push(v);
       }
       const selects = [];
       for(let i=0;i<40;i++){
-        const field = surveyForm[`select${i+1}`];
-        const v = field && field.value;
+        const v = surveyForm[`select${i+1}`]?.value;
         if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
         selects.push(parseInt(v,10));
       }
@@ -206,86 +204,32 @@
       // 분류
       const result = classifyType(selects);
 
-      // 저장
+      // 저장 데이터 (응답자 측에서는 절대 PDF 생성/다운로드/업로드 안 함)
       const docData = {
-        type, name, birth,
-        essays, selects,
+        type,
+        name,
+        birth,
+        essays,
+        selects,
         resultType: result.label,
         typeScores: result.scores,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        // 응답자 페이지: PDF 생성 금지 플래그 (관리자 참고용)
+        pdfCreated: false
       };
-      const ref = await db.collection('responses').add(docData);
 
-      // PDF 생성
-      try {
-        await buildPdfPreview(docData);
-        const pdfBlob = await generatePdfFromPreview();
+      // Firestore 저장
+      await db.collection('responses').add(docData);
 
-        if (window.USE_STORAGE) {
-          const fileName = `응답_${name}_${type}_${Date.now()}.pdf`;
-          const storageRef = storage.ref().child(`pdfs/${fileName}`);
-          await storageRef.put(pdfBlob, { contentType: 'application/pdf' });
-          const pdfUrl = await storageRef.getDownloadURL();
-          await db.collection('responses').doc(ref.id).update({ pdfUrl });
-        } else {
-          // 업로드 없이 즉시 다운로드
-          const url = URL.createObjectURL(pdfBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `응답_${name}_${type}.pdf`;
-          a.click();
-          URL.revokeObjectURL(url);
-        }
-      } catch (err) {
-        console.warn('PDF 생성/업로드 실패:', err);
-        // PDF 실패해도 제출은 성공 처리
-      }
-
-      // 완료 표시
+      // 완료 표시 (PDF 미생성, 다운로드 없음)
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
     } catch (err) {
-      errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err.message || err);
+      errorEl.textContent = (err && err.message) ? `제출 중 오류: ${err.message}` : '제출 중 오류가 발생했습니다.';
       errorEl.style.display = 'block';
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = oldText;
+      submitBtn.textContent = originalText;
     }
   });
-
-  // ── PDF 프리뷰 구성 & 생성 ───────────────────────────────
-  async function buildPdfPreview(data){
-    const summary = document.getElementById('pdfSummary');
-    const answers = document.getElementById('pdfAnswers');
-    summary.innerHTML = `
-      <div><strong>이름:</strong> ${escapeHtml(data.name)}</div>
-      <div><strong>생년월일:</strong> ${escapeHtml(data.birth)}</div>
-      <div><strong>지원유형:</strong> ${escapeHtml(data.type)}</div>
-      <div><strong>제출일:</strong> ${data.date.slice(0,10)}</div>
-      <div><strong>유형 결과:</strong> ${escapeHtml(data.resultType)} (A:${data.typeScores.A}, B:${data.typeScores.B}, C:${data.typeScores.C}, D:${data.typeScores.D})</div>
-    `;
-    let html = `<h3 style="margin:12px 0 6px 0;">서술형 답변</h3>`;
-    data.essays.forEach((t,i)=>{
-      html += `<div style="margin-bottom:8px;"><strong>${i+1}.</strong> ${escapeHtml(t)}</div>`;
-    });
-    html += `<h3 style="margin:12px 0 6px 0;">선택형 결과(1~40)</h3>`;
-    html += `<div>${data.selects.map((v,i)=>`${i+1}:${v===1?'①':'②'}`).join(' · ')}</div>`;
-    answers.innerHTML = html;
-  }
-  function escapeHtml(s){
-    return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-  async function generatePdfFromPreview(){
-    const preview = document.getElementById('pdfPreview');
-    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#fff' });
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 40; // 좌우 여백
-    const ratio = canvas.height / canvas.width;
-    const imgHeight = imgWidth * ratio;
-    pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
-    return pdf.output('blob');
-  }
 })();
