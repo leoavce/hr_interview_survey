@@ -1,5 +1,3 @@
-<!-- js/firebase-init.js -->
-<script>
 (function () {
   const firebaseConfig = {
     apiKey: "AIzaSyBTd07lQmaMleeNMo_3VXrxZtAdbw-AXlU",
@@ -44,4 +42,3 @@
     });
   };
 })();
-</script>
