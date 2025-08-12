@@ -9,7 +9,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
 
-  <!-- Firebase (compat CDN: JS에서 firebase.* 사용을 위해) -->
+  <!-- 선택된 유형 파란색 하이라이트를 위한 보강 스타일 -->
+  <style>
+    /* 선택된 지원유형 버튼을 파란색으로 */
+    .type-buttons .btn.type.selected {
+      background-color: #3182f6;
+      color: #fff;
+      border-color: #3182f6;
+      box-shadow: 0 2px 8px rgba(49,130,246,.25);
+    }
+
+    /* 관리자 버튼을 시작 버튼과 톤 맞추되, 위로 두 칸 정도 간격 */
+    .admin-entry {
+      margin-top: 24px; /* 두 칸 정도 */
+      display: flex;
+      justify-content: center;
+    }
+  </style>
+
+  <!-- Firebase (compat CDN) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -37,7 +55,7 @@
     <!-- 기본 정보 입력 -->
     <form id="applyForm" class="section" novalidate>
       <h3 class="section-subtitle">기본 정보 입력</h3>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:12px;"><!-- (2) 이름-생년월일 간격 한 칸 -->
         <label for="name">이름</label>
         <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
       </div>
@@ -52,8 +70,9 @@
       <div id="errorMessage" class="error" style="display:none;"></div>
     </form>
 
-    <div class="footer-links">
-      <button class="link" onclick="location.href='admin.html'">관리자 페이지</button>
+    <!-- (3) 관리자 페이지 버튼을 시작 버튼과 같은 디자인으로, 위로 두 칸 간격 -->
+    <div class="admin-entry">
+      <button class="btn primary" type="button" onclick="location.href='admin.html'">관리자 페이지</button>
     </div>
   </div>
 </body>
