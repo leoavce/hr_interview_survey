@@ -44,17 +44,27 @@
 
   // 로그인
   loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    loginError.style.display = 'none';
-    const email = document.getElementById('adminEmail').value.trim();
-    const pw = document.getElementById('adminPw').value;
-    try {
+  e.preventDefault();
+  loginError.style.display = 'none';
+  const email = document.getElementById('adminEmail').value.trim();
+  const pw = document.getElementById('adminPw').value;
+
+  try {
+    const cred = firebase.auth.EmailAuthProvider.credential(email, pw);
+    const cu = auth.currentUser;
+
+    // 익명 세션이면 업그레이드(링크), 아니면 일반 로그인
+    if (cu && cu.isAnonymous) {
+      await cu.linkWithCredential(cred);
+    } else {
       await auth.signInWithEmailAndPassword(email, pw);
-    } catch (err) {
-      loginError.textContent = err.message || '로그인 실패';
-      loginError.style.display = 'block';
     }
-  });
+  } catch (err) {
+    console.error(err);
+    loginError.textContent = err.message || '로그인 실패';
+    loginError.style.display = 'block';
+  }
+});
 
   // 로그아웃
   if (logoutBtn) {
@@ -188,3 +198,4 @@
     return pdf.output('blob');
   }
 })();
+
