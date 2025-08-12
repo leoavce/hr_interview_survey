@@ -80,7 +80,7 @@ input:focus, textarea:focus {
 /* small util */
 .muted { color:#9ca3af; font-size:12px; }
 
-/* ====== Salary Inputs (공통) ====== */
+/* ====== Salary Inputs ====== */
 .salary-inputs {
   display: flex;
   align-items: center;
@@ -95,27 +95,23 @@ input:focus, textarea:focus {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
-
-/* ====== 신입만 좁게(옵션 B) ====== */
-/* 새 컨테이너 */
-.salary-inline-new {
-  display: inline-flex;
+.salary-row-new {
+  display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 6px;
 }
-.salary-inline-new .salary-unit { color:#9ca3af; font-size:12px; }
-
-/* 새 인풋(신입 전용) */
-.salary-input-narrow {
-  width: 96px;          /* 경력은 유지, 신입만 좁게 */
+.salary-input-new {
+  width: 80px;
   padding: 8px 10px;
   font-size: 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
 }
 
-/* (호환) 혹시 기존에 붙여둔 클래스명이 있다면 아래도 지원 */
-.salary-row-new { display:flex; align-items:center; gap:8px; }
-.salary-input-new { width:96px; padding:8px 10px; font-size:14px; }
+/* 지원 유형 선택 시 선택된 버튼 스타일 */
+.btn.type.selected {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.btn.type.selected:hover {
+  background: #1e40af;
+}
