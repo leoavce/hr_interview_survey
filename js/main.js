@@ -1,6 +1,6 @@
 // js/main.js
 (function () {
-  const typeButtons = document.querySelectorAll('.btn.type');
+  const typeBtns = document.querySelectorAll('.type-buttons .btn.type');
   const form = document.getElementById('applyForm');
   const nameInput = document.getElementById('name');
   const birthInput = document.getElementById('birth');
@@ -9,19 +9,18 @@
 
   let selectedType = null;
 
-    // (1) 유형 선택 시 파란색 하이라이트(클래스 selected 토글) + 상태 저장
+  // 유형 선택(파란색 selected 하이라이트)
   typeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       typeBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedType = btn.getAttribute('data-type') || null;
-      validateForm();
+      validate();
     });
   });
 
   // 숫자/길이 제한 (YYYYMMDD)
   birthInput.addEventListener('input', (e) => {
-    // 숫자만
     e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
     validate();
   });
@@ -53,8 +52,9 @@
     startBtn.disabled = false;
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const name = nameInput.value.trim();
     const birth = birthInput.value.trim();
 
@@ -68,7 +68,7 @@
     sessionStorage.setItem('applyName', name);
     sessionStorage.setItem('applyBirth', birth);
 
+    // 설문 페이지로 이동
     location.href = 'survey.html';
   });
 })();
-
