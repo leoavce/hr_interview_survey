@@ -1,5 +1,13 @@
 // js/admin.js
-(function () {
+((async function () {
+  try {
+    await readyFirebase(); // firebase-init.js에서 제공
+  } catch (e) {
+    console.error("Firebase 준비 실패:", e);
+    alert("Firebase 초기화 오류: " + e.message);
+    return; // 더 진행하지 않음
+  }
+ function () {
   const loginForm = document.getElementById('adminLogin');
   const adminPanel = document.getElementById('adminPanel');
   const loginError = document.getElementById('loginError');
@@ -292,3 +300,4 @@ async function generatePdfFromDoc(data) {
     return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 })();
+
