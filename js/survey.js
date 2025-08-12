@@ -1,12 +1,16 @@
+// js/survey.js
 (function () {
   const surveyForm = document.getElementById('surveyForm');
-  const questionsDiv = document.getElementById('questions');
   const titleEl = document.getElementById('surveyTitle');
   const infoEl = document.getElementById('candidateInfo');
   const errorEl = document.getElementById('errorMessage');
   const successBox = document.getElementById('successBox');
 
-  const type = sessionStorage.getItem('applyType');
+  const essaySection = document.getElementById('essaySection');
+  const choiceSection = document.getElementById('choiceSection');
+
+  // 세션에서 지원자 정보
+  const type = sessionStorage.getItem('applyType'); // "신입" / "경력"
   const name = sessionStorage.getItem('applyName');
   const birth = sessionStorage.getItem('applyBirth');
 
@@ -18,52 +22,7 @@
   titleEl.textContent = `${type} 설문 응답`;
   infoEl.textContent = `${name} (${birth}) · ${type}`;
 
-  // 서술형 질문
-  const essayQuestions = {
-    '신입': [
-      '안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ①',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ②',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ③',
-      '살아오면서 성취한 것 중 타인에게 자랑할 만한 것 ①',
-      '살아오면서 성취한 것 중 타인에게 자랑할 만한 것 ②',
-      '살아오면서 성취한 것 중 타인에게 자랑할 만한 것 ③',
-      '지원 직무(부문)에서 성과를 내기 위해 필요한 역량은?',
-      '본인의 역량 보유 수준 (점수/10점 만점)',
-      '필요 역량을 갖추기 위해 어떤 노력을 해왔는지(키워드)',
-      '타인이 인정(칭찬)하는 본인 성격(성향)상의 장점과 이유',
-      '안랩 근무 기대요소 1순위',
-      '안랩 근무 기대요소 2순위',
-      '안랩 근무 기대요소 3순위',
-      '안랩 근무 기대요소 4순위',
-      '안랩 근무 기대요소 5순위',
-      '안랩 근무 기대요소 6순위',
-      '안랩 외 타사 진행상황',
-      '희망 최저 연봉 (만원)',
-      '희망 최고 연봉 (만원)'
-    ],
-    '경력': [
-      '직장생활에서의 성공에 대한 정의',
-      '본인 성격의 장점',
-      '본인 성격의 단점',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ①',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ②',
-      '본인이 다른 사람과 구별되는 특별히 뛰어난 점 ③',
-      '나를 표현하는 단어 3가지',
-      '가장 큰 성취 경험과 그 역할',
-      '안랩 근무 기대요소 1순위',
-      '안랩 근무 기대요소 2순위',
-      '안랩 근무 기대요소 3순위',
-      '안랩 근무 기대요소 4순위',
-      '안랩 근무 기대요소 5순위',
-      '안랩 근무 기대요소 6순위',
-      '현재 연봉(기본급, 만원)',
-      '희망 최저 연봉(만원)',
-      '희망 최고 연봉(만원)'
-    ]
-  };
-
-  // 선택형 40쌍
+  // ========= 선택형 40쌍 (그대로 유지) =========
   const choicePairs = [
     ["나는 활동을 좋아한다.", "나는 문제를 체계적 / 조직적으로 다룬다."],
     ["나는 변화를 무척 좋아한다.", "나는 개인활동보다 팀 활동이 더 효과적이라고 믿는다."],
@@ -107,39 +66,180 @@
     ["나는 간결하고 핵심을 찌르는 말을 좋아한다.", "나는 나 자신에 대해 자신감을 갖고 있다."]
   ];
 
-  function renderQuestions() {
-    // 서술형
-    essayQuestions[type].forEach((q, i) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'q essay';
-      wrap.innerHTML = `
-        <label class="q-label">${i + 1}. ${q}</label>
-        <textarea name="essay${i+1}" required></textarea>
-      `;
-      questionsDiv.appendChild(wrap);
-    });
-    // 선택형
-    choicePairs.forEach((pair, idx) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'q choice';
-      wrap.innerHTML = `
-        <div class="choice-head">문항 ${idx + 1}/40</div>
-        <div class="choice-body">
+  // ========= 서술형 템플릿 =========
+  function renderEssaysForNew() {
+    essaySection.innerHTML = `
+      <div class="q">
+        <label class="q-label">1. 안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</label>
+        <textarea name="n_dream" required placeholder="안랩에서의 미래 포부와 목표를 구체적으로 기술해주세요"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">2. 본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 최대 3가지(1가지여도 무방함) 소개해 주십시오.</label>
+        <div class="grid-1">
+          <textarea name="n_strength1" required placeholder="뛰어난 점 첫 번째"></textarea>
+          <textarea name="n_strength2" placeholder="뛰어난 점 두 번째 (선택사항)"></textarea>
+          <textarea name="n_strength3" placeholder="뛰어난 점 세 번째 (선택사항)"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">3. 살아오면서 성취한 것 중 타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</label>
+        <div class="grid-1">
+          <textarea name="n_ach1" required placeholder="자랑할 만한 성취 첫 번째"></textarea>
+          <textarea name="n_ach2" required placeholder="자랑할 만한 성취 두 번째"></textarea>
+          <textarea name="n_ach3" required placeholder="자랑할 만한 성취 세 번째"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">4. 지원 직무(부문)에서 성과를 내기 위해 필요한 역량이 무엇이라고 생각하시는지 기술해 주십시오.</label>
+        <textarea name="n_comp_needed" required placeholder="필요한 역량을 구체적으로 기술해주세요"></textarea>
+
+        <div style="margin-top:10px;">
+          <label class="q-label">본인의 역량 보유 수준 (10점 만점)</label>
+          <input type="number" min="0" max="10" step="1" name="n_comp_score" required placeholder="0~10" style="width:120px;">
+        </div>
+
+        <div style="margin-top:10px;">
+          <label class="q-label">필요 역량을 갖추기 위해 어떤 과정(노력)을 통해 역량을 갖춰왔는지 Key Word 중심 설명</label>
+          <textarea name="n_comp_effort" required placeholder="역량 개발 과정을 키워드 중심으로 설명해주세요"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">5. 타인이 인정(칭찬)하는 본인 성격(성향)상의 장점과 그 이유를 기술해주십시오.</label>
+        <textarea name="n_personality_strength" required placeholder="타인이 인정하는 성격상 장점과 이유를 구체적으로 기술해주세요"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">6. 다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</label>
+        <div class="info">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+        <div class="grid-3">
+          <input name="n_expect1" required placeholder="1순위">
+          <input name="n_expect2" required placeholder="2순위">
+          <input name="n_expect3" required placeholder="3순위">
+          <input name="n_expect4" required placeholder="4순위">
+          <input name="n_expect5" required placeholder="5순위">
+          <input name="n_expect6" required placeholder="6순위">
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">7. 안랩 외에 현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</label>
+        <textarea name="n_otheroffers" required placeholder="예: A사 최종합격, B사 2차면접 진행 중 등 (없으면 '없음')"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">8. 희망연봉은?</label>
+        <div class="grid-3">
+          <div>
+            <span class="muted">최저</span>
+            <input type="number" name="n_salary_min" required placeholder="0"> (만원)
+          </div>
+          <div class="muted" style="align-self:center;">~</div>
+          <div>
+            <span class="muted">최고</span>
+            <input type="number" name="n_salary_max" required placeholder="0"> (만원)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderEssaysForExp() {
+    essaySection.innerHTML = `
+      <div class="q">
+        <label class="q-label">1. 직장생활에서의 성공에 대해서 정의해 보십시오.</label>
+        <textarea name="e_success" required placeholder="직장생활에서의 성공에 대한 정의를 입력해주세요"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">2. 본인 성격의 장/단점에 대해 각각 간략하게 기입해 주십시오.</label>
+        <textarea name="e_pros" required placeholder="#장점 - 내용을 입력해주세요"></textarea>
+        <textarea name="e_cons" required placeholder="#단점 - 내용을 입력해주세요" style="margin-top:8px;"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">3. 본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 세가지 정도 기입해 주십시오.</label>
+        <div class="grid-1">
+          <textarea name="e_strength1" required placeholder="뛰어난 점 첫 번째"></textarea>
+          <textarea name="e_strength2" required placeholder="뛰어난 점 두 번째"></textarea>
+          <textarea name="e_strength3" required placeholder="뛰어난 점 세 번째"></textarea>
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">4. 나를 표현하는 단어 3가지를 기입해 주십시오.</label>
+        <textarea name="e_words" required placeholder="나를 표현하는 단어 3가지 (예: 도전적, 창의적, 협력적)"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">5. 가장 큰 성취를 했던 경험과 그 때 본인이 맡았던 역할을 기술해 주십시오.</label>
+        <textarea name="e_bigach" required placeholder="성취 경험과 역할을 구체적으로 기술해주세요"></textarea>
+      </div>
+
+      <div class="q">
+        <label class="q-label">6. 다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</label>
+        <div class="info">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+        <div class="grid-3">
+          <input name="e_expect1" required placeholder="1순위">
+          <input name="e_expect2" required placeholder="2순위">
+          <input name="e_expect3" required placeholder="3순위">
+          <input name="e_expect4" required placeholder="4순위">
+          <input name="e_expect5" required placeholder="5순위">
+          <input name="e_expect6" required placeholder="6순위">
+        </div>
+      </div>
+
+      <div class="q">
+        <label class="q-label">7. 연봉 정보를 기입해 주십시오.</label>
+        <div class="grid-1">
+          <div>
+            <span>현재연봉은? (기본급)</span>
+            <div style="margin-top:6px;">
+              <input type="number" name="e_salary_now" required placeholder="0" style="width:140px;"> (만원)
+            </div>
+          </div>
+          <div style="margin-top:8px;">
+            <span>희망연봉은?</span>
+            <div class="grid-3" style="margin-top:6px; align-items:center;">
+              <span class="muted">최저</span>
+              <input type="number" name="e_salary_min" required placeholder="0" style="width:120px;">
+              <span class="muted">~ 최고</span>
+              <input type="number" name="e_salary_max" required placeholder="0" style="width:120px;">
+              <span class="muted">(만원)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ========= 렌더링 =========
+  if (type === '신입') renderEssaysForNew();
+  else renderEssaysForExp();
+
+  // 선택형 렌더링
+  choiceSection.innerHTML = choicePairs.map((pair, i) => {
+    return `
+      <div class="choice-pair">
+        <div class="choice-pair-header">문항 ${i + 1}/40</div>
+        <div class="choice-options">
           <label class="choice-option">
-            <input type="radio" name="select${idx+1}" value="1" required>
+            <input type="radio" name="select${i+1}" value="1" required>
             <span>${pair[0]}</span>
           </label>
           <label class="choice-option">
-            <input type="radio" name="select${idx+1}" value="2">
+            <input type="radio" name="select${i+1}" value="2">
             <span>${pair[1]}</span>
           </label>
         </div>
-      `;
-      questionsDiv.appendChild(wrap);
-    });
-  }
+      </div>
+    `;
+  }).join('');
 
-  // 분류 로직
+  // ========= 분류 로직 =========
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
       "A": [1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -170,67 +270,119 @@
     return {label: '균형형', scores};
   }
 
-  renderQuestions();
-
+  // ========= 제출 =========
   surveyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorEl.style.display = 'none';
-
-    // 버튼 상태 변경
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
-    const originalText = submitBtn.textContent;
     submitBtn.textContent = '제출 중...';
 
     try {
-      // Firebase 준비(익명 인증)
-      await window.ensureFirebaseReady?.();
+      await ensureFirebaseReady();
 
-      // 수집
-      const essays = [];
-      const essayLen = essayQuestions[type].length;
-      for(let i=0;i<essayLen;i++){
-        const v = (surveyForm[`essay${i+1}`]?.value || '').trim();
-        if(!v){ throw new Error(`서술형 ${i+1}번을 입력해주세요.`); }
-        essays.push(v);
-      }
+      // 1) 선택형 수집
       const selects = [];
       for(let i=0;i<40;i++){
-        const v = surveyForm[`select${i+1}`]?.value;
-        if(!v){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
-        selects.push(parseInt(v,10));
+        const sel = surveyForm[`select${i+1}`].value;
+        if(!sel){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
+        selects.push(parseInt(sel, 10));
       }
 
-      // 분류
+      // 2) 서술형(구조화) 수집
+      let form = {};
+      if (type === '신입') {
+        form = {
+          dream: surveyForm.n_dream.value.trim(),
+          strengths: [
+            surveyForm.n_strength1.value.trim(),
+            surveyForm.n_strength2.value.trim(),
+            surveyForm.n_strength3.value.trim(),
+          ].filter(Boolean),
+          achievements: [
+            surveyForm.n_ach1.value.trim(),
+            surveyForm.n_ach2.value.trim(),
+            surveyForm.n_ach3.value.trim(),
+          ],
+          competency: {
+            needed: surveyForm.n_comp_needed.value.trim(),
+            score: Number(surveyForm.n_comp_score.value),
+            effort: surveyForm.n_comp_effort.value.trim()
+          },
+          personalityStrength: surveyForm.n_personality_strength.value.trim(),
+          expectations: [
+            surveyForm.n_expect1.value.trim(),
+            surveyForm.n_expect2.value.trim(),
+            surveyForm.n_expect3.value.trim(),
+            surveyForm.n_expect4.value.trim(),
+            surveyForm.n_expect5.value.trim(),
+            surveyForm.n_expect6.value.trim()
+          ],
+          otherOffers: surveyForm.n_otheroffers.value.trim(),
+          salary: {
+            min: Number(surveyForm.n_salary_min.value),
+            max: Number(surveyForm.n_salary_max.value)
+          }
+        };
+      } else {
+        form = {
+          successDef: surveyForm.e_success.value.trim(),
+          pros: surveyForm.e_pros.value.trim(),
+          cons: surveyForm.e_cons.value.trim(),
+          strengths: [
+            surveyForm.e_strength1.value.trim(),
+            surveyForm.e_strength2.value.trim(),
+            surveyForm.e_strength3.value.trim(),
+          ],
+          selfWords: surveyForm.e_words.value.trim(),
+          bigAchievement: surveyForm.e_bigach.value.trim(),
+          expectations: [
+            surveyForm.e_expect1.value.trim(),
+            surveyForm.e_expect2.value.trim(),
+            surveyForm.e_expect3.value.trim(),
+            surveyForm.e_expect4.value.trim(),
+            surveyForm.e_expect5.value.trim(),
+            surveyForm.e_expect6.value.trim()
+          ],
+          salary: {
+            now: Number(surveyForm.e_salary_now.value),
+            min: Number(surveyForm.e_salary_min.value),
+            max: Number(surveyForm.e_salary_max.value)
+          }
+        };
+      }
+
+      // 3) 분류
       const result = classifyType(selects);
 
-      // 저장 데이터 (응답자 측에서는 절대 PDF 생성/다운로드/업로드 안 함)
+      // 4) 저장 데이터(기존 필드 유지 + form 추가)
       const docData = {
         type,
         name,
         birth,
-        essays,
         selects,
         resultType: result.label,
         typeScores: result.scores,
-        date: new Date().toISOString(),
-        // 응답자 페이지: PDF 생성 금지 플래그 (관리자 참고용)
-        pdfCreated: false
+        form,                         // 새 구조화 필드
+        date: new Date().toISOString()
       };
 
       // Firestore 저장
       await db.collection('responses').add(docData);
 
-      // 완료 표시 (PDF 미생성, 다운로드 없음)
+      // 응답자 측은 PDF 업로드/링크 제공 안 함 (관리자만 생성)
+      // if (window.USE_STORAGE) { ... } // 필요 시 나중에 활성화
+
+      // 완료 처리
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
     } catch (err) {
-      errorEl.textContent = (err && err.message) ? `제출 중 오류: ${err.message}` : '제출 중 오류가 발생했습니다.';
+      console.error(err);
+      errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err.message || err);
       errorEl.style.display = 'block';
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = originalText;
+      submitBtn.textContent = '설문 제출';
     }
   });
 })();
-
