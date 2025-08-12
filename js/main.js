@@ -9,13 +9,13 @@
 
   let selectedType = null;
 
-  // 타입 선택
-  typeButtons.forEach(btn => {
+    // (1) 유형 선택 시 파란색 하이라이트(클래스 selected 토글) + 상태 저장
+  typeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      typeButtons.forEach(b => b.classList.remove('selected'));
+      typeBtns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
-      selectedType = btn.getAttribute('data-type');
-      validate();
+      selectedType = btn.getAttribute('data-type') || null;
+      validateForm();
     });
   });
 
@@ -71,3 +71,4 @@
     location.href = 'survey.html';
   });
 })();
+
