@@ -6,7 +6,7 @@
   <title>AhnLab 채용 관리자</title>
   <link rel="stylesheet" href="css/style.css"/>
 
-  <!-- Firebase -->
+  <!-- Firebase (compat) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -24,7 +24,7 @@
   <div class="container card">
     <h1 class="title">AhnLab 채용 관리자</h1>
 
-    <!-- (기본값: 보이도록) 로그인 -->
+    <!-- 로그인 -->
     <form id="adminLogin" class="section">
       <div class="form-group">
         <label>이메일</label>
@@ -36,9 +36,12 @@
       </div>
       <button class="btn primary" type="submit">로그인</button>
       <div id="loginError" class="error" style="display:none;"></div>
+      <div class="muted" style="margin-top:8px;">
+        이 기기는 관리자 전용 계정으로 로그인합니다. 응답 페이지는 다른 기기/브라우저에서 익명으로 제출 가능합니다.
+      </div>
     </form>
 
-    <!-- 대시보드 (기본값: 숨김) -->
+    <!-- 대시보드 -->
     <div id="adminPanel" style="display:none;">
       <div class="section stats">
         <div>총 응답: <strong id="totalCount">0</strong></div>
@@ -49,7 +52,12 @@
       </div>
 
       <div class="section">
-        <h2>응답 목록</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2>응답 목록 (실시간)</h2>
+          <div class="muted">
+            PDF 업로드: <strong id="storageFlagLabel">OFF</strong>
+          </div>
+        </div>
         <div id="list"></div>
       </div>
     </div>
