@@ -9,15 +9,22 @@
   const expCountEl = document.getElementById('expCount');
   const todayCountEl = document.getElementById('todayCount');
   const listEl = document.getElementById('list');
-
   const logoutBtn = document.getElementById('logoutBtn');
 
+  // ✅ 관리자 페이지: 익명 자동 로그인 금지 + 세션 퍼시스턴스
   (async () => {
-    try { await ensureFirebaseReady(); } catch (e) { console.warn('Firebase 준비 실패:', e); }
+    try {
+      await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      await ensureFirebaseReady({ allowAnonymous: false });
+    } catch (e) {
+      console.warn('Firebase 준비 실패:', e);
+    }
   })();
 
   auth.onAuthStateChanged((user) => {
-    if (user) {
+    // ✅ 익명 사용자는 "로그인된 것으로 간주하지 않음"
+    const isAdmin = !!(user && !user.isAnonymous);
+    if (isAdmin) {
       loginForm.style.display = 'none';
       adminPanel.style.display = 'block';
       loadStatsAndList();
@@ -54,7 +61,6 @@
 
     listEl.innerHTML = docs.map(doc => {
       const when = new Date(doc.date).toLocaleString('ko-KR');
-      const pdfBtn = `<button class="btn small" data-generate="${doc.id}">PDF 생성/다운</button>`;
       return `
         <div class="row item">
           <div class="col">
@@ -62,7 +68,7 @@
             <div class="meta">${when} · <span class="badge small">${escapeHtml(doc.type)}</span> · 결과: ${escapeHtml(doc.resultType||'')}</div>
           </div>
           <div class="col actions">
-            ${pdfBtn}
+            <button class="btn small" data-generate="${doc.id}">PDF 생성/다운</button>
           </div>
         </div>
       `;
@@ -95,7 +101,7 @@
     });
   }
 
-  // 선택형 점수 재계산(백업용)
+  // ===== PDF 생성 부분 (이전 답변의 표/디자인 반영 버전 사용 중) =====
   function computeTypeScoresFromSelects(selects=[]) {
     const map = {
       A:[1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -141,8 +147,7 @@
       </div>
     `;
   }
-
-  async function generatePdfFromDoc(data) {
+async function generatePdfFromDoc(data) {
     // 최종 점수 확보
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
