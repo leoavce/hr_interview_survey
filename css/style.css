@@ -91,3 +91,14 @@ input:focus, textarea:focus {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
+.salary-row-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.salary-input-new {
+  width: 80px; /* 경력 칸 크기 안 건드리고, 신입만 줄이기 */
+  padding: 8px 10px;
+  font-size: 14px;
+}
