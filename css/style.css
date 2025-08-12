@@ -75,3 +75,19 @@ input:focus, textarea:focus {
 
 /* small util */
 .muted { color:#9ca3af; font-size:12px; }
+
+/* ====== Salary Inputs ====== */
+.salary-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 14px;
+}
+.salary-input {
+  width: 80px !important;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
