@@ -33,7 +33,7 @@
         <button class="btn type" data-type="경력">경력 지원</button>
       </div>
     </div>
-    
+
     <!-- 기본 정보 입력 -->
     <form id="applyForm" class="section" novalidate>
       <h3 class="section-subtitle">기본 정보 입력</h3>
@@ -49,13 +49,13 @@
       <div class="form-actions">
         <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
         <button type="button" 
-                class="link" 
-                style="margin-top:10px; display:block;" 
+                style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;" 
                 onclick="location.href='admin.html'">
           관리자 페이지
         </button>
       </div>
+      <div id="errorMessage" class="error" style="display:none;"></div>
+    </form>
+  </div>
 </body>
 </html>
-
-
