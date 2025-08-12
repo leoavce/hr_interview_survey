@@ -1,13 +1,20 @@
 // js/admin.js
-((async function () {
-  try {
-    await readyFirebase(); // firebase-init.js에서 제공
-  } catch (e) {
-    console.error("Firebase 준비 실패:", e);
-    alert("Firebase 초기화 오류: " + e.message);
-    return; // 더 진행하지 않음
+(async function () {
+  // ===== Firebase 준비: 관리자 페이지는 "익명 로그인 금지" =====
+  if (!window.firebase || !window.auth || !window.db) {
+    console.error('Firebase 초기화가 이루어지지 않았습니다. 스크립트 순서를 확인하세요 (firebase-init.js → admin.js).');
+    alert('Firebase 초기화 오류: 스크립트 로딩 순서를 확인해주세요.');
+    return;
   }
- function () {
+
+  try {
+    // 세션 퍼시스턴스 (관리자 로그인은 탭/윈도우 단위)
+    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+  } catch (e) {
+    console.warn('세션 퍼시스턴스 설정 실패:', e);
+  }
+
+  // DOM
   const loginForm = document.getElementById('adminLogin');
   const adminPanel = document.getElementById('adminPanel');
   const loginError = document.getElementById('loginError');
@@ -19,18 +26,8 @@
   const listEl = document.getElementById('list');
   const logoutBtn = document.getElementById('logoutBtn');
 
-  // ✅ 관리자 페이지: 익명 자동 로그인 금지 + 세션 퍼시스턴스
-  (async () => {
-    try {
-      await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
-      await ensureFirebaseReady({ allowAnonymous: false });
-    } catch (e) {
-      console.warn('Firebase 준비 실패:', e);
-    }
-  })();
-
+  // 익명 사용자는 관리자 로그인으로 간주하지 않음
   auth.onAuthStateChanged((user) => {
-    // ✅ 익명 사용자는 "로그인된 것으로 간주하지 않음"
     const isAdmin = !!(user && !user.isAnonymous);
     if (isAdmin) {
       loginForm.style.display = 'none';
@@ -42,6 +39,7 @@
     }
   });
 
+  // 로그인
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.style.display = 'none';
@@ -55,8 +53,12 @@
     }
   });
 
-  logoutBtn.addEventListener('click', () => auth.signOut());
+  // 로그아웃
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => auth.signOut());
+  }
 
+  // 목록/통계 로드
   async function loadStatsAndList() {
     const snap = await db.collection('responses').orderBy('date','desc').get();
     const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -82,6 +84,7 @@
       `;
     }).join('');
 
+    // PDF 생성/다운로드
     listEl.querySelectorAll('button[data-generate]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-generate');
@@ -109,7 +112,7 @@
     });
   }
 
-  // ===== PDF 생성 부분 (이전 답변의 표/디자인 반영 버전 사용 중) =====
+  // ===== PDF 생성 =====
   function computeTypeScoresFromSelects(selects=[]) {
     const map = {
       A:[1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -155,8 +158,8 @@
       </div>
     `;
   }
-async function generatePdfFromDoc(data) {
-    // 최종 점수 확보
+
+  async function generatePdfFromDoc(data) {
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
       : computeTypeScoresFromSelects(data.selects);
@@ -172,7 +175,7 @@ async function generatePdfFromDoc(data) {
     const title = (data.type === '신입') ? '신입사원  면접 사전 질문지' : '경력사원  면접 사전 질문지';
     const f = data.form || {};
 
-    // 공통 상단
+    // 상단 공통
     const headerHtml = `
       <h2 style="margin:0 0 6px 0; font-size:24px;">${title}</h2>
       <div style="font-size:14px; margin:4px 0 16px 0;">
@@ -300,4 +303,3 @@ async function generatePdfFromDoc(data) {
     return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 })();
-
