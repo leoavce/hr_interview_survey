@@ -132,11 +132,11 @@
 
       <div class="q">
         <label class="q-label">8. 희망연봉은?</label>
-        <div class="salary-inputs">
+        <div class="salary-row-new">
           <span class="muted">최저</span>
-          <input type="number" name="n_salary_min" required placeholder="0">
+          <input type="number" name="n_salary_min" required placeholder="0" class="salary-input-new"> 
           <span class="muted">~ 최고</span>
-          <input type="number" name="n_salary_max" required placeholder="0">
+          <input type="number" name="n_salary_max" required placeholder="0" class="salary-input-new"> 
           <span class="muted">(만원)</span>
         </div>
       </div>
@@ -381,5 +381,6 @@
     }
   });
 })();
+
 
 
