@@ -1,14 +1,13 @@
 // js/admin.js
 (async function () {
-  // ===== Firebase 준비: 관리자 페이지는 "익명 로그인 금지" =====
+  // Firebase 준비 확인
   if (!window.firebase || !window.auth || !window.db) {
-    console.error('Firebase 초기화가 이루어지지 않았습니다. 스크립트 순서를 확인하세요 (firebase-init.js → admin.js).');
+    console.error('Firebase 초기화가 이루어지지 않았습니다. (firebase-init.js → admin.js 순서 확인)');
     alert('Firebase 초기화 오류: 스크립트 로딩 순서를 확인해주세요.');
     return;
   }
 
   try {
-    // 세션 퍼시스턴스 (관리자 로그인은 탭/윈도우 단위)
     await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
   } catch (e) {
     console.warn('세션 퍼시스턴스 설정 실패:', e);
@@ -20,13 +19,13 @@
   const loginError = document.getElementById('loginError');
 
   const totalCountEl = document.getElementById('totalCount');
-  const newCountEl = document.getElementById('newCount');
-  const expCountEl = document.getElementById('expCount');
+  const newCountEl   = document.getElementById('newCount');
+  const expCountEl   = document.getElementById('expCount');
   const todayCountEl = document.getElementById('todayCount');
-  const listEl = document.getElementById('list');
-  const logoutBtn = document.getElementById('logoutBtn');
+  const listEl       = document.getElementById('list');
+  const logoutBtn    = document.getElementById('logoutBtn');
 
-  // 익명 사용자는 관리자 로그인으로 간주하지 않음
+  // 익명 계정은 관리자 로그인으로 취급하지 않음
   auth.onAuthStateChanged((user) => {
     const isAdmin = !!(user && !user.isAnonymous);
     if (isAdmin) {
@@ -44,7 +43,7 @@
     e.preventDefault();
     loginError.style.display = 'none';
     const email = document.getElementById('adminEmail').value.trim();
-    const pw = document.getElementById('adminPw').value;
+    const pw    = document.getElementById('adminPw').value;
     try {
       await auth.signInWithEmailAndPassword(email, pw);
     } catch (err) {
@@ -54,9 +53,7 @@
   });
 
   // 로그아웃
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => auth.signOut());
-  }
+  if (logoutBtn) logoutBtn.addEventListener('click', () => auth.signOut());
 
   // 목록/통계 로드
   async function loadStatsAndList() {
@@ -65,8 +62,8 @@
 
     const today = new Date().toISOString().slice(0,10);
     totalCountEl.textContent = docs.length;
-    newCountEl.textContent = docs.filter(d => d.type === '신입').length;
-    expCountEl.textContent = docs.filter(d => d.type === '경력').length;
+    newCountEl.textContent   = docs.filter(d => d.type === '신입').length;
+    expCountEl.textContent   = docs.filter(d => d.type === '경력').length;
     todayCountEl.textContent = docs.filter(d => (d.date||'').slice(0,10) === today).length;
 
     listEl.innerHTML = docs.map(doc => {
@@ -84,10 +81,10 @@
       `;
     }).join('');
 
-    // PDF 생성/다운로드
+    // PDF 생성/다운
     listEl.querySelectorAll('button[data-generate]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const id = btn.getAttribute('data-generate');
+        const id  = btn.getAttribute('data-generate');
         const doc = docs.find(d => d.id === id);
         if (!doc) return;
         try {
@@ -112,7 +109,7 @@
     });
   }
 
-  // ===== PDF 생성 =====
+  // ===== PDF 생성 도우미 =====
   function computeTypeScoresFromSelects(selects=[]) {
     const map = {
       A:[1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
@@ -175,7 +172,6 @@
     const title = (data.type === '신입') ? '신입사원  면접 사전 질문지' : '경력사원  면접 사전 질문지';
     const f = data.form || {};
 
-    // 상단 공통
     const headerHtml = `
       <h2 style="margin:0 0 6px 0; font-size:24px;">${title}</h2>
       <div style="font-size:14px; margin:4px 0 16px 0;">
@@ -291,8 +287,8 @@
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
 
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 40;
-    const ratio = canvas.height / canvas.width;
+    const imgWidth  = pageWidth - 40;
+    const ratio     = canvas.height / canvas.width;
     const imgHeight = imgWidth * ratio;
 
     pdf.addImage(imgData, 'PNG', 20, 20, imgWidth, imgHeight);
@@ -300,6 +296,8 @@
   }
 
   function escapeHtml(s){
-    return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return String(s||'').replace(/[&<>"']/g,(m)=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
   }
 })();
