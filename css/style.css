@@ -21,6 +21,10 @@ html, body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont
 .btn.primary:hover { background:#1e40af; }
 .btn.small { padding:6px 10px; font-size:12px; border-radius:8px; }
 .btn.outline { background:#fff; color:#2563eb; border-color:#bfdbfe; }
+
+/* 지원 유형 선택 시 파란 하이라이트 */
+.btn.type.selected { background:#2563eb; border-color:#2563eb; color:#fff; }
+
 .error { margin-top:12px; color:#b91c1c; background:#fee2e2; border:1px solid #fecaca; padding:10px 12px; border-radius:10px; }
 .success { margin-top:12px; color:#065f46; background:#d1fae5; border:1px solid #a7f3d0; padding:14px 16px; border-radius:12px; }
 
@@ -76,7 +80,7 @@ input:focus, textarea:focus {
 /* small util */
 .muted { color:#9ca3af; font-size:12px; }
 
-/* ====== Salary Inputs ====== */
+/* ====== Salary Inputs (공통) ====== */
 .salary-inputs {
   display: flex;
   align-items: center;
@@ -91,14 +95,27 @@ input:focus, textarea:focus {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
-.salary-row-new {
-  display: flex;
+
+/* ====== 신입만 좁게(옵션 B) ====== */
+/* 새 컨테이너 */
+.salary-inline-new {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
 }
+.salary-inline-new .salary-unit { color:#9ca3af; font-size:12px; }
 
-.salary-input-new {
-  width: 80px; /* 경력 칸 크기 안 건드리고, 신입만 줄이기 */
+/* 새 인풋(신입 전용) */
+.salary-input-narrow {
+  width: 96px;          /* 경력은 유지, 신입만 좁게 */
   padding: 8px 10px;
   font-size: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
 }
+
+/* (호환) 혹시 기존에 붙여둔 클래스명이 있다면 아래도 지원 */
+.salary-row-new { display:flex; align-items:center; gap:8px; }
+.salary-input-new { width:96px; padding:8px 10px; font-size:14px; }
