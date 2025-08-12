@@ -219,8 +219,6 @@
       <div style="font-size:12px;">
         <h3 style="margin:12px 0 6px 0;">서술형 답변</h3>
         ${(data.essays||[]).map((t,i)=>`<div style="margin-bottom:8px;"><strong>${i+1}.</strong> ${escapeHtml(t)}</div>`).join('')}
-        <h3 style="margin:12px 0 6px 0;">선택형 결과(1~40)</h3>
-        <div>${(data.selects||[]).map((v,i)=>`${i+1}:${v===1?'①':'②'}`).join(' · ')}</div>
       </div>
     `;
     document.body.appendChild(temp);
@@ -253,3 +251,4 @@
     return String(s||'').replace(/[&<>"']/g,(m)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 })();
+
