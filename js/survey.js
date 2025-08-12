@@ -138,7 +138,6 @@
             <input type="number" name="n_salary_min" required placeholder="0"> (만원)
           </div>
           <div class="muted" style="align-self:center;">~</div>
-          <div>
             <span class="muted">최고</span>
             <input type="number" name="n_salary_max" required placeholder="0"> (만원)
           </div>
@@ -205,9 +204,9 @@
             <span>희망연봉은?</span>
             <div class="grid-3" style="margin-top:6px; align-items:center;">
               <span class="muted">최저</span>
-              <input type="number" name="e_salary_min" required placeholder="0" style="width:120px;">
+              <input type="number" name="e_salary_min" required placeholder="0" style="width:20px;">
               <span class="muted">~ 최고</span>
-              <input type="number" name="e_salary_max" required placeholder="0" style="width:120px;">
+              <input type="number" name="e_salary_max" required placeholder="0" style="width:20px;">
               <span class="muted">(만원)</span>
             </div>
           </div>
@@ -386,3 +385,4 @@
     }
   });
 })();
+
