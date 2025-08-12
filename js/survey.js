@@ -132,15 +132,12 @@
 
       <div class="q">
         <label class="q-label">8. 희망연봉은?</label>
-        <div class="grid-3">
-          <div>
-            <span class="muted">최저</span>
-            <input type="number" name="n_salary_min" required placeholder="0"> (만원)
-          </div>
-          <div class="muted" style="align-self:center;">~</div>
-            <span class="muted">최고</span>
-            <input type="number" name="n_salary_max" required placeholder="0"> (만원)
-          </div>
+        <div class="salary-inputs">
+          <span class="muted">최저</span>
+          <input type="number" name="n_salary_min" required placeholder="0">
+          <span class="muted">~ 최고</span>
+          <input type="number" name="n_salary_max" required placeholder="0">
+          <span class="muted">(만원)</span>
         </div>
       </div>
     `;
@@ -197,21 +194,20 @@
           <div>
             <span>현재연봉은? (기본급)</span>
             <div style="margin-top:6px;">
-              <input type="number" name="e_salary_now" required placeholder="0" style="width:140px;"> (만원)
+              <input type="number" name="e_salary_now" required placeholder="0" class="salary-input"> (만원)
             </div>
           </div>
           <div style="margin-top:8px;">
             <span>희망연봉은?</span>
-            <div class="grid-3" style="margin-top:6px; align-items:center;">
+            <div class="salary-inputs">
               <span class="muted">최저</span>
-              <input type="number" name="e_salary_min" required placeholder="0" style="width:20px;">
+              <input type="number" name="e_salary_min" required placeholder="0" class="salary-input">
               <span class="muted">~ 최고</span>
-              <input type="number" name="e_salary_max" required placeholder="0" style="width:20px;">
+              <input type="number" name="e_salary_max" required placeholder="0" class="salary-input">
               <span class="muted">(만원)</span>
             </div>
           </div>
         </div>
-      </div>
     `;
   }
 
@@ -385,4 +381,5 @@
     }
   });
 })();
+
 
