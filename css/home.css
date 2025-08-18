@@ -1,92 +1,84 @@
-/* ===== 홈(index) 전용: 다른 페이지 영향 없도록 전부 .home 스코프 ===== */
-.home { background:#164B9F; }
+/* === 홈(인트로) 전용: 전역 클래스 .info 를 절대 건드리지 않음 === */
 
-/* 스냅 + 자연스러운 스크롤 */
-.home .home__snap-container{
-  height:100vh;
-  overflow-y:auto;
-  scroll-snap-type:y proximity;
-  scroll-behavior:smooth;
-}
-.home .home__section{
-  min-height:100vh;
-  scroll-snap-align:start;
-  display:flex; align-items:center;
-  position:relative;
-  transform: translateY(var(--parallax, 0px));
+/* 공통 컨테이너 */
+.home {
+  position: relative;
 }
 
-.home .home__inner{ width:min(1100px, 92%); margin:0 auto; padding:48px 0; }
-
-/* 등장 애니메이션 */
-.home .home__reveal{ opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease; }
-.home .in-view{ opacity:1; transform:translateY(0); }
-
-/* ===== CUT #1 : HERO ===== */
-.home .home__hero{ color:#fff; --hero-image:none; }
-.home .home__hero::before{
-  content:"";
-  position:absolute; inset:0;
-  background:
-    radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.0) 60%),
-    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
-    var(--hero-image) center/cover no-repeat;
-  filter:saturate(1.05);
-}
-.home .home__center{ text-align:center; position:relative; z-index:1; }
-.home .home__hero-title{ margin:0; font-size:40px; font-weight:800; letter-spacing:-.3px; }
-.home .home__hero-sub{ margin:10px 0 0 0; font-weight:400; opacity:.9; }
-.home .home__hero-logo{ margin-top:44px; height:44px; opacity:.95; filter:drop-shadow(0 6px 20px rgba(0,0,0,.25)); }
-.home .home__scroll-hint{
-  position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
-  color:#fff; font-size:13px; opacity:.75; z-index:1;
-  animation:home-hint 1.8s ease-in-out infinite;
-}
-@keyframes home-hint{ 0%{transform:translate(-50%,0)} 50%{transform:translate(-50%,6px)} 100%{transform:translate(-50%,0)} }
-
-/* ===== CUT #2 : INFO ===== */
-.home .home__info{ color:#fff; }
-.home .home__heading{ margin:0 0 18px 0; font-size:26px; font-weight:800; letter-spacing:-.2px; }
-.home .home__note-list{ display:grid; gap:12px; }
-.home .home__note-item{
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.25);
-  color:#fff;
-  padding:12px 14px;
-  border-radius:10px;
-  backdrop-filter:saturate(140%) blur(0.5px);
-  font-size:15px;
+/* 섹션 공통 */
+.home__section {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  scroll-snap-align: start;
 }
 
-/* ===== CUT #3 : FORM ===== */
-.home .home__form-cut{ color:#fff; }
-.home .home__grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center; }
-@media (max-width: 900px){ .home .home__grid{ grid-template-columns:1fr; } }
-
-.home .home__copy-title{ margin:0 0 8px 0; font-size:22px; font-weight:800; }
-.home .home__copy-sub{ margin:0; opacity:.85; font-size:13px; }
-
-.home .home__card{
-  background:#fff; color:#111; border-radius:14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.18);
-  padding:22px;
+/* 히어로 */
+.home__hero {
+  position: relative;
+  color: #fff;
+  overflow: hidden;
+  background: #0f2f6e;
 }
-.home .home__panel-title{ margin:0 0 12px 0; font-weight:800; }
-.home .home__panel-subtitle{ margin:8px 0 10px 0; font-weight:700; }
-
-/* 타입 버튼 간격 */
-.home .type-buttons{ display:flex; gap:8px; flex-wrap:wrap; }
-
-/* 3컷(정보/폼)에도 히어로와 동일 톤의 딥블루 배경을 깔아줌 */
-.home .home__info::before,
-.home .home__form-cut::before{
+.home__hero::before{
   content:"";
   position:absolute; inset:0; z-index:0;
   background:
     radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
     linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
-    #164B9F; /* 히어로와 동일 베이스 컬러 */
+    var(--hero-image, none),
+    #164B9F;
+  background-size: cover;
+  background-position: center;
+  transform: translate3d(0, var(--parallax, 0), 0);
+  will-change: transform;
+}
+.home__inner { position: relative; z-index: 1; padding: 0 16px; width: 100%; max-width: 1100px; }
+
+.home__hero-copy { text-align: center; max-width: 780px; margin: 0 auto; }
+.home__title { margin: 0 0 10px 0; font-size: 40px; font-weight: 800; letter-spacing: -0.3px; }
+.home__subtitle { color: rgba(255,255,255,.9); font-size: 16px; margin: 0 0 16px 0; }
+
+.home__cta { display: flex; gap: 12px; align-items: center; justify-content: center; }
+.home__scroll-indicator{
+  border: 1px solid rgba(255,255,255,.6);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  width: 40px; height: 40px;
+  line-height: 38px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: .2s;
+}
+.home__scroll-indicator:hover{
+  background: rgba(255,255,255,.15);
 }
 
-/* 섹션 내부 콘텐츠가 배경 위로 올라오도록 */
-.home .home__inner{ position:relative; z-index:1; }
+/* 폼 컷(2번째 섹션) — 1컷과 동일 톤 */
+.home__form-cut{
+  position: relative;
+}
+.home__form-cut::before{
+  content:"";
+  position:absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
+    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+    #164B9F;
+}
+.home__form-card{
+  position: relative; z-index: 1;
+}
+
+/* 부드러운 등장이미션 */
+.home__reveal{ opacity: 0; transform: translateY(12px); transition: .6s ease; }
+.home__reveal.in-view{ opacity: 1; transform: translateY(0); }
+
+/* 홈 전용 안내문 (전역 .info 와 분리) */
+.home-note { color:#e5e7eb; font-size:13px; }
+
+/* 스크롤 스냅 느낌 강화 (페이지 전체) */
+html, body {
+  scroll-behavior: smooth;
+}
