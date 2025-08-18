@@ -1,6 +1,10 @@
 /* ====== Layout/Base ====== */
 * { box-sizing: border-box; }
-html, body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Helvetica Neue", Arial, sans-serif; color:#1f2937; }
+html, body {
+  margin:0; padding:0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Helvetica Neue", Arial, sans-serif;
+  color:#1f2937;
+}
 .bg { background:#f6f7fb; min-height:100vh; }
 .container { max-width:960px; margin:40px auto; padding:0 16px; }
 .card { background:#fff; border-radius:16px; box-shadow: 0 6px 24px rgba(0,0,0,0.06); padding:28px; }
@@ -22,19 +26,20 @@ html, body { margin:0; padding:0; font-family: -apple-system, BlinkMacSystemFont
 .btn.small { padding:6px 10px; font-size:12px; border-radius:8px; }
 .btn.outline { background:#fff; color:#2563eb; border-color:#bfdbfe; }
 
-/* 지원 유형 선택 시 파란 하이라이트 */
+/* 지원 유형 선택 시 하이라이트 */
 .btn.type.selected { background:#2563eb; border-color:#2563eb; color:#fff; }
+.btn.type.selected:hover { background:#1e40af; }
 
 .error { margin-top:12px; color:#b91c1c; background:#fee2e2; border:1px solid #fecaca; padding:10px 12px; border-radius:10px; }
 .success { margin-top:12px; color:#065f46; background:#d1fae5; border:1px solid #a7f3d0; padding:14px 16px; border-radius:12px; }
 
-/* ====== Question Blocks (업그레이드) ====== */
+/* ====== Question Blocks ====== */
 .q { margin:14px 0; padding:14px; border:1px solid #eef0f4; border-radius:14px; background:#fafbff; }
 .q:hover { border-color:#e2e8f0; background:#f8fafc; }
 .q-label { display:block; font-weight:700; margin-bottom:10px; color:#111827; letter-spacing:-0.2px; }
 .info { color:#6b7280; font-size:13px; margin-bottom:8px; }
 
-/* input/textarea 스타일 */
+/* inputs */
 input[type="text"],
 input[type="number"],
 input[type="email"],
@@ -81,37 +86,112 @@ input:focus, textarea:focus {
 .muted { color:#9ca3af; font-size:12px; }
 
 /* ====== Salary Inputs ====== */
-.salary-inputs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: 14px;
-}
-.salary-input {
-  width: 80px !important;
-  padding: 8px 10px;
-  font-size: 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-.salary-row-new {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.salary-input-new {
-  width: 80px;
-  padding: 8px 10px;
-  font-size: 14px;
+.salary-inputs { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:14px; }
+.salary-input { width:80px !important; padding:8px 10px; font-size:14px; border:1px solid #e5e7eb; border-radius:8px; }
+.salary-row-new { display:flex; align-items:center; gap:8px; }
+.salary-input-new { width:80px; padding:8px 10px; font-size:14px; }
+
+/* ----------------------------------------------------------
+   ▼ 랜딩(3컷) 전용 스타일 – 기존 기능 영향 없음
+   ---------------------------------------------------------- */
+
+.landing {
+  height: 100%;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  overflow-y: auto;
+  background: #0f3f86; /* 파란 베이스 */
 }
 
-/* 지원 유형 선택 시 선택된 버튼 스타일 */
-.btn.type.selected {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+/* 공통 컷 섹션 */
+.cut {
+  min-height: 100vh;
+  scroll-snap-align: start;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.btn.type.selected:hover {
-  background: #1e40af;
+
+/* 하단 구분선(흰 선) */
+.cut-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 6px;
+  background: #fff;
+  opacity: .9;
+}
+
+/* 컷1: 히어로 */
+.hero { background: #0f3f86; color: #fff; }
+.hero-inner { text-align: center; padding: 40px 16px; }
+.hero-title { font-size: 34px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.3px; }
+.hero-sub { font-size: 18px; opacity: .9; margin: 0 0 40px 0; }
+.hero-logo { font-weight: 900; font-size: 44px; letter-spacing: 1px; margin-top: 12px; }
+.down-indicator { display:inline-block; margin-top: 40px; color: #cfe2ff; text-decoration:none; font-size:28px; transition: transform .2s; }
+.down-indicator:hover { transform: translateY(3px); }
+
+/* 컷2: 안내 */
+.mid { background: #0f3f86; color: #fff; }
+.mid-inner { max-width: 960px; width: 100%; padding: 0 16px; }
+.mid-title { font-size: 22px; font-weight: 800; margin: 0 0 18px 0; }
+.note-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.note-list li {
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.06);
+  color: #e9f1ff;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+
+/* 컷3: 설문 */
+.survey-cut {
+  background: #0f3f86;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.survey-grid {
+  max-width: 1200px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr; /* 좌 카피 : 우 카드 */
+  gap: 32px;
+  align-items: start;
+}
+.survey-copy {
+  color: #e9f1ff;
+  padding: 12px 8px;
+}
+.copy-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  letter-spacing: -0.2px;
+}
+.copy-sub {
+  font-size: 14px;
+  opacity: .9;
+  margin: 0;
+}
+.survey-footer-note {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  color: #cfe2ff;
+  font-size: 12px;
+  opacity: .9;
+}
+
+/* 우측 카드의 그림자 강조 */
+.survey-cut .container.card {
+  box-shadow: 0 16px 40px rgba(0,0,0,.25);
+}
+
+/* 반응형 */
+@media (max-width: 960px) {
+  .survey-grid { grid-template-columns: 1fr; }
+  .survey-footer-note { margin-top: 16px; }
 }
