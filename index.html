@@ -6,10 +6,10 @@
   <title>AhnLab 채용 설문</title>
 
   <!-- 폰트 & 기본 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
 
-  <!-- Firebase (compat CDN: JS에서 firebase.* 사용을 위해) -->
+  <!-- Firebase (compat) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -17,78 +17,65 @@
 
   <!-- 앱 초기화 -->
   <script defer src="js/firebase-init.js"></script>
-
-  <!-- 페이지 스크립트 -->
+  <!-- 페이지 스크립트(기능 유지) -->
   <script defer src="js/main.js"></script>
 </head>
 <body>
 
-  <!-- 컷 스냅 컨테이너 -->
+  <!-- 스냅 + 스무스 스크롤 컨테이너 -->
   <div class="snap-container">
 
-    <!-- 컷 1 : 히어로 -->
-    <section class="snap-section hero">
-      <div class="container">
-        <div class="reveal" style="text-align:center;">
-          <h1 class="title" style="color:#fff;">안전해서 더욱 자유로운 세상</h1>
-          <p style="margin-top:8px; opacity:.85;">More Security, More Freedom</p>
-          <div style="margin-top:48px;">
-            <!-- 로고 이미지는 프로젝트에 맞게 경로 조정 -->
-            <img src="img/ahnlab-mark.svg" alt="AhnLab" style="height:44px; opacity:.95;">
-          </div>
+    <!-- CUT 1: HERO (배경이미지: 아래 data-src 교체) -->
+    <section class="snap-section hero parallax" data-src="img/hero.jpg">
+      <div class="cut-inner">
+        <div class="reveal center">
+          <h1 class="hero-title">안전해서 더욱 자유로운 세상</h1>
+          <p class="hero-sub">More Security, More Freedom</p>
+          <img class="hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab">
         </div>
         <div class="scroll-hint">아래로 스크롤 ▾</div>
       </div>
     </section>
 
-    <!-- 컷 2 : 유의사항 -->
-    <section class="snap-section info">
-      <div class="container">
+    <!-- CUT 2: 안내/유의사항 -->
+    <section class="snap-section info parallax">
+      <div class="cut-inner">
         <div class="reveal">
-          <h2 class="section-title" style="color:#fff; border-color:rgba(255,255,255,.25);">
-            면접 전 사전 설문 진행 유의사항
-          </h2>
-          <div class="white-card" style="background:transparent; border:1px solid rgba(255,255,255,.35);">
-            <ol style="margin:0; padding-left:18px; line-height:1.9;">
-              <li>예시 텍스트</li>
-              <li>예시 텍스트</li>
-              <li>예시 텍스트</li>
-              <li>예시 텍스트</li>
-            </ol>
+          <h2 class="cut-heading">면접 전 사전 설문 진행 유의사항</h2>
+          <div class="note-list">
+            <div class="note-item">1. 예시 텍스트</div>
+            <div class="note-item">2. 예시 텍스트</div>
+            <div class="note-item">3. 예시 텍스트</div>
+            <div class="note-item">4. 예시 텍스트</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 컷 3 : 좌측 카피 + 우측 설문 시작 폼 -->
-    <section class="snap-section form-cut">
-      <div class="container" style="display:grid; grid-template-columns:1.1fr 0.9fr; gap:28px; align-items:center;">
-        <!-- 왼쪽 카피 -->
+    <!-- CUT 3: 좌측 카피 + 우측 설문 시작 폼 -->
+    <section class="snap-section form-cut parallax">
+      <div class="cut-inner grid">
+        <!-- LEFT COPY -->
         <div class="reveal">
-          <h3 style="font-size:22px; font-weight:700; margin:0 0 8px 0;">
-            지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.
-          </h3>
-          <p style="opacity:.8; font-size:13px; margin:0;">
-            유의사항 확인 이후, 우측 탭에서 정보 기입 및 설문 진행을 시작해주세요.
-          </p>
+          <h3 class="copy-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</h3>
+          <p class="copy-sub">유의사항 확인 이후, 우측 패널에서 기본 정보 입력 및 설문 진행을 시작해주세요.</p>
         </div>
 
-        <!-- 오른쪽 폼 (id/class는 기존 그대로 → main.js 그대로 동작) -->
+        <!-- RIGHT FORM (기존 id/class 유지: main.js 그대로 작동) -->
         <div class="white-card reveal">
-          <h4 style="margin:0 0 12px 0; font-weight:800;">AhnLab 채용 설문</h4>
+          <h4 class="panel-title">AhnLab 채용 설문</h4>
 
           <div class="section" style="margin-top:10px;">
-            <h5 class="section-title" style="border:none; padding:0; margin:0 0 10px 0;">지원 유형을 선택하세요</h5>
+            <h5 class="panel-subtitle">지원 유형을 선택하세요</h5>
             <div class="type-buttons">
               <button class="btn type" data-type="신입">신입 지원</button>
               <button class="btn type" data-type="경력">경력 지원</button>
             </div>
           </div>
 
-          <!-- 기본 정보 입력 -->
           <form id="applyForm" class="section" novalidate>
-            <h5 class="section-title" style="border:none; padding:0; margin:8px 0 10px 0;">기본 정보 입력</h5>
-            <div class="form-group" style="margin-bottom: 10px;">
+            <h5 class="panel-subtitle">기본 정보 입력</h5>
+            <div class="form-group" style="margin-bottom: 12px;">
               <label for="name">이름</label>
               <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
             </div>
@@ -102,8 +89,8 @@
             <div class="form-actions">
               <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
               <button type="button"
-                      style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
-                      onclick="location.href='admin.html'">
+                style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
+                onclick="location.href='admin.html'">
                 관리자 페이지
               </button>
             </div>
@@ -115,14 +102,47 @@
 
   </div>
 
-  <!-- 등장 애니메이션 전용(기능과 무관) -->
+  <!-- 인터섹션 + 패럴랙스 스무딩 (기능 영향 없음) -->
   <script>
+    // 1) 섹션 등장 애니메이션
     window.addEventListener('DOMContentLoaded', () => {
       const io = new IntersectionObserver((entries) => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
-      }, { threshold: .2 });
+      }, { threshold: .15 });
       document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     });
+
+    // 2) 패럴랙스(부드럽게): requestAnimationFrame로 Y 변환 보간
+    (function () {
+      const ease = 0.08;            // 부드러움
+      const maxShift = 40;          // 최대 이동(px)
+      const targets = [...document.querySelectorAll('.parallax')];
+      let current = 0;
+
+      function loop() {
+        const scrollY = document.querySelector('.snap-container')?.scrollTop ?? window.scrollY;
+        current += (scrollY - current) * ease;
+
+        const h = window.innerHeight || 1;
+        targets.forEach(sec => {
+          const rect = sec.getBoundingClientRect();
+          const centerDist = (rect.top + rect.height / 2) - h / 2;
+          const t = Math.max(-1, Math.min(1, centerDist / (h / 2))); // -1 ~ 1
+          const shift = -t * maxShift;
+          sec.style.setProperty('--parallax', shift.toFixed(2) + 'px');
+        });
+
+        requestAnimationFrame(loop);
+      }
+      loop();
+    })();
+
+    // 3) 히어로 배경 이미지 세팅 (data-src 사용)
+    (function () {
+      const hero = document.querySelector('.hero');
+      const src = hero?.getAttribute('data-src');
+      if (src) hero.style.setProperty('--hero-image', `url("${src}")`);
+    })();
   </script>
 </body>
 </html>
