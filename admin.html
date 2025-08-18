@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AhnLab 채용 설문</title>
+  <title>AhnLab 채용 관리자</title>
 
-  <!-- 폰트 & 기본 스타일 -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- 스타일 -->
   <link rel="stylesheet" href="css/style.css"/>
 
   <!-- Firebase (compat) -->
@@ -15,100 +14,54 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
-  <!-- 앱 초기화 -->
+  <!-- PDF 라이브러리 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- 반드시 init → admin.js 순서 -->
   <script defer src="js/firebase-init.js"></script>
-
-  <!-- 페이지 스크립트 (기존 로직 유지) -->
-  <script defer src="js/main.js"></script>
+  <script defer src="js/admin.js"></script>
 </head>
+<body class="bg">
+  <div class="container card">
+    <h1 class="title">AhnLab 채용 관리자</h1>
 
-<body class="landing">
+    <!-- 로그인 -->
+    <form id="adminLogin" class="section">
+      <div class="form-group">
+        <label>이메일</label>
+        <input type="email" id="adminEmail" autocomplete="username" required/>
+      </div>
+      <div class="form-group">
+        <label>비밀번호</label>
+        <input type="password" id="adminPw" autocomplete="current-password" required/>
+      </div>
+      <button class="btn primary" type="submit">로그인</button>
 
-  <!-- 컷 1: 히어로 -->
-  <section class="cut hero">
-    <div class="hero-inner">
-      <h1 class="hero-title">안전해서 더욱 자유로운 세상</h1>
-      <p class="hero-sub">More Security, More Freedom</p>
-      <div class="hero-logo">AhnLab</div>
+      <div id="loginError" class="error" style="display:none;"></div>
+      <div class="muted" style="margin-top:8px;">
+        본 페이지는 관리 페이지로, 응답자의 경우 뒤로 가기 버튼을 통한 설문 진행 부탁드립니다.
+      </div>
+    </form>
 
-      <a href="#notice" class="down-indicator" aria-label="다음 섹션으로 이동">↓</a>
-    </div>
-    <div class="cut-divider"></div>
-  </section>
-
-  <!-- 컷 2: 안내 -->
-  <section id="notice" class="cut mid">
-    <div class="mid-inner">
-      <h2 class="mid-title">면접 전 사전 설문 진행 유의사항</h2>
-      <ul class="note-list">
-        <li>1. 예시 텍스트 – 브라우저 닫기 전까지 설문이 유지됩니다.</li>
-        <li>2. 예시 텍스트 – 개인 정보는 채용 목적 외 사용하지 않습니다.</li>
-        <li>3. 예시 텍스트 – 선택형/서술형 문항을 모두 작성해주세요.</li>
-        <li>4. 예시 텍스트 – 저장 후 수정은 관리자에게 문의 바랍니다.</li>
-      </ul>
-    </div>
-    <div class="cut-divider"></div>
-  </section>
-
-  <!-- 컷 3: 설문 -->
-  <section id="survey" class="cut survey-cut">
-    <div class="survey-grid">
-
-      <!-- 좌측 카피영역 -->
-      <div class="survey-copy">
-        <p class="copy-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</p>
-        <p class="copy-sub">유의사항 확인 이후, 우측 영역의 <strong>기본 정보 입력</strong>부터 설문 진행을 시작해주세요.</p>
+    <!-- 대시보드 -->
+    <div id="adminPanel" style="display:none;">
+      <div class="section stats">
+        <div>총 응답: <strong id="totalCount">0</strong></div>
+        <div>신입: <strong id="newCount">0</strong></div>
+        <div>경력: <strong id="expCount">0</strong></div>
+        <div>오늘: <strong id="todayCount">0</strong></div>
+        <button id="logoutBtn" class="btn outline" style="float:right;">로그아웃</button>
       </div>
 
-      <!-- 우측 설문 카드 (기존 기능/마크업 유지) -->
-      <div class="container card">
-        <h1 class="title">AhnLab 채용 설문</h1>
-
-        <!-- 지원 유형 선택 -->
-        <div class="section">
-          <h2 class="section-title">지원 유형을 선택하세요</h2>
-          <div class="type-buttons">
-            <button class="btn type" data-type="신입">신입 지원</button>
-            <button class="btn type" data-type="경력">경력 지원</button>
-          </div>
+      <div class="section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2>응답 목록 (실시간)</h2>
+          <div class="muted">PDF 업로드: <strong id="storageFlagLabel">OFF</strong></div>
         </div>
-
-        <!-- 기본 정보 입력 -->
-        <form id="applyForm" class="section" novalidate>
-          <h3 class="section-subtitle">기본 정보 입력</h3>
-
-          <div class="form-group" style="margin-bottom: 10px;">
-            <label for="name">이름</label>
-            <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
-          </div>
-
-          <div class="form-group">
-            <label for="birth">생년월일 (YYYYMMDD)</label>
-            <input id="birth" name="birth" type="text" inputmode="numeric" pattern="\\d{8}" maxlength="8" placeholder="예: 19900101" required />
-            <small class="hint">8자리(숫자)만 입력 가능</small>
-          </div>
-
-          <div class="form-actions">
-            <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
-
-            <!-- 관리자 페이지: 회색 텍스트 버튼 -->
-            <button type="button"
-                    style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
-                    onclick="location.href='admin.html'">
-              관리자 페이지
-            </button>
-          </div>
-
-          <div id="errorMessage" class="error" style="display:none;"></div>
-        </form>
-      </div>
-
-      <!-- 하단 안내문 -->
-      <div class="survey-footer-note">
-        유의사항 확인 이후, 우측 입력 영역에서 <strong>지원 유형·기본 정보</strong>를 먼저 입력한 뒤 “응답 시작하기”를 눌러주세요.
+        <div id="list"></div>
       </div>
     </div>
-  </section>
-
+  </div>
 </body>
 </html>
