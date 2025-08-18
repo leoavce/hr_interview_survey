@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AhnLab 채용 설문</title>
 
-  <!-- 폰트 & 기본 스타일 -->
+  <!-- 폰트 & 기본 스타일(공용) -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
+
+  <!-- ✅ 홈 전용 스타일(이 파일만 index에서 로드) -->
+  <link rel="stylesheet" href="css/home.css"/>
 
   <!-- Firebase (compat) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -17,56 +20,55 @@
 
   <!-- 앱 초기화 -->
   <script defer src="js/firebase-init.js"></script>
-  <!-- 페이지 스크립트(기능 유지) -->
+  <!-- 페이지 스크립트(기존 기능 유지) -->
   <script defer src="js/main.js"></script>
 </head>
-<body>
-
+<body class="home">
   <!-- 스냅 + 스무스 스크롤 컨테이너 -->
-  <div class="snap-container">
+  <div class="home__snap-container">
 
-    <!-- CUT 1: HERO (배경이미지: data-src 교체) -->
-    <section class="snap-section hero parallax" data-src="img/hero.jpg" aria-label="브랜드 히어로">
-      <div class="cut-inner">
-        <div class="reveal center">
-          <h1 class="hero-title">안전해서 더욱 자유로운 세상</h1>
-          <p class="hero-sub">More Security, More Freedom</p>
-          <img class="hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab 로고">
+    <!-- CUT 1: HERO (배경이미지: 아래 data-src 교체) -->
+    <section class="home__section home__hero home__parallax" data-src="img/hero.jpg">
+      <div class="home__inner">
+        <div class="home__reveal home__center">
+          <h1 class="home__hero-title">안전해서 더욱 자유로운 세상</h1>
+          <p class="home__hero-sub">More Security, More Freedom</p>
+          <img class="home__hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab">
         </div>
-        <div class="scroll-hint">아래로 스크롤 ▾</div>
+        <div class="home__scroll-hint">아래로 스크롤 ▾</div>
       </div>
     </section>
 
     <!-- CUT 2: 안내/유의사항 -->
-    <section class="snap-section info parallax" aria-label="유의사항">
-      <div class="cut-inner">
-        <div class="reveal">
-          <h2 class="cut-heading">면접 전 사전 설문 진행 유의사항</h2>
-          <div class="note-list">
-            <div class="note-item">1. 예시 텍스트</div>
-            <div class="note-item">2. 예시 텍스트</div>
-            <div class="note-item">3. 예시 텍스트</div>
-            <div class="note-item">4. 예시 텍스트</div>
+    <section class="home__section home__info home__parallax">
+      <div class="home__inner">
+        <div class="home__reveal">
+          <h2 class="home__heading">면접 전 사전 설문 진행 유의사항</h2>
+          <div class="home__note-list">
+            <div class="home__note-item">1. 예시 텍스트</div>
+            <div class="home__note-item">2. 예시 텍스트</div>
+            <div class="home__note-item">3. 예시 텍스트</div>
+            <div class="home__note-item">4. 예시 텍스트</div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- CUT 3: 좌측 카피 + 우측 설문 시작 폼 -->
-    <section class="snap-section form-cut parallax" aria-label="설문 시작">
-      <div class="cut-inner grid">
+    <section class="home__section home__form-cut home__parallax">
+      <div class="home__inner home__grid">
         <!-- LEFT COPY -->
-        <div class="reveal">
-          <h3 class="copy-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</h3>
-          <p class="copy-sub">유의사항 확인 이후, 우측 패널에서 기본 정보 입력 및 설문 진행을 시작해주세요.</p>
+        <div class="home__reveal">
+          <h3 class="home__copy-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</h3>
+          <p class="home__copy-sub">유의사항 확인 이후, 우측 패널에서 기본 정보 입력 및 설문 진행을 시작해주세요.</p>
         </div>
 
-        <!-- RIGHT FORM (id/class 그대로: main.js 작동) -->
-        <div class="white-card reveal">
-          <h4 class="panel-title">AhnLab 채용 설문</h4>
+        <!-- RIGHT FORM (기존 id/class 유지: main.js 그대로 작동) -->
+        <div class="home__card home__reveal">
+          <h4 class="home__panel-title">AhnLab 채용 설문</h4>
 
           <div class="section" style="margin-top:10px;">
-            <h5 class="panel-subtitle">지원 유형을 선택하세요</h5>
+            <h5 class="home__panel-subtitle">지원 유형을 선택하세요</h5>
             <div class="type-buttons">
               <button class="btn type" data-type="신입">신입 지원</button>
               <button class="btn type" data-type="경력">경력 지원</button>
@@ -74,7 +76,7 @@
           </div>
 
           <form id="applyForm" class="section" novalidate>
-            <h5 class="panel-subtitle">기본 정보 입력</h5>
+            <h5 class="home__panel-subtitle">기본 정보 입력</h5>
             <div class="form-group" style="margin-bottom: 12px;">
               <label for="name">이름</label>
               <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
@@ -102,10 +104,9 @@
 
   </div>
 
-  <!-- 인터섹션 + 패럴랙스 스무딩 (기능 영향 없음) -->
+  <!-- 홈 전용 스크립트(디자인용, 기능 영향 없음) -->
   <script>
-   <script>
-    // 1) 등장 애니메이션 (그대로)
+    // 1) 등장 애니메이션
     window.addEventListener('DOMContentLoaded', () => {
       const io = new IntersectionObserver((entries) => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
@@ -113,77 +114,30 @@
       document.querySelectorAll('.home__reveal').forEach(el => io.observe(el));
     });
 
-    // 2) 패럴랙스 스무딩 (보간 적용 → 더 부드러운 이동)
+    // 2) 패럴랙스 스무딩
     (function () {
-      const maxShift = 40;      // 섹션당 최대 시프트(px)
-      const lerp = (a,b,t)=>a+(b-a)*t;
-      const state = new WeakMap(); // 섹션별 현재 시프트 저장
-
+      const ease = 0.08, maxShift = 40;
+      const targets = [...document.querySelectorAll('.home__parallax')];
       function loop() {
         const h = window.innerHeight || 1;
-        document.querySelectorAll('.home__parallax').forEach(sec => {
+        targets.forEach(sec => {
           const rect = sec.getBoundingClientRect();
-          const centerDist = (rect.top + rect.height/2) - h/2;
-          const t = Math.max(-1, Math.min(1, centerDist / (h/2)));
-          const target = (-t * maxShift);
-
-          const current = state.get(sec) ?? 0;
-          const next = lerp(current, target, 0.08); // 0.08로 천천히 따라붙게
-          state.set(sec, next);
-
-          sec.style.setProperty('--parallax', next.toFixed(2) + 'px');
+          const centerDist = (rect.top + rect.height / 2) - h / 2;
+          const t = Math.max(-1, Math.min(1, centerDist / (h / 2)));
+          const shift = -t * maxShift;
+          sec.style.setProperty('--parallax', shift.toFixed(2) + 'px');
         });
         requestAnimationFrame(loop);
       }
       loop();
     })();
 
-    // 3) 히어로 배경 이미지 세팅 (그대로)
+    // 3) 히어로 배경 이미지 세팅
     (function () {
       const hero = document.querySelector('.home__hero');
       const src = hero?.getAttribute('data-src');
       if (src) hero.style.setProperty('--hero-image', `url("${src}")`);
     })();
-
-    // 4) 부드러운 "책장 넘김" 스냅(프로시미티 + 보정 스냅)
-    (function () {
-      const scroller = document.querySelector('.home__snap-container');
-      if (!scroller) return;
-
-      let snapTimer = null;
-      let lastScrollTop = 0;
-
-      function scheduleSnap() {
-        if (snapTimer) clearTimeout(snapTimer);
-        snapTimer = setTimeout(() => {
-          const sections = [...document.querySelectorAll('.home__section')];
-          const y = scroller.scrollTop;
-          const vh = scroller.clientHeight;
-
-          // 가장 가까운 섹션 찾기
-          let best = null, bestDist = Infinity;
-          sections.forEach(sec => {
-            const top = sec.offsetTop;
-            const dist = Math.abs(top - y);
-            if (dist < bestDist) { bestDist = dist; best = top; }
-          });
-
-          // 스무스 스냅
-          if (best !== null) scroller.scrollTo({ top: best, behavior: 'smooth' });
-        }, 120); // 멈춘 뒤 120ms에 스냅
-      }
-
-      scroller.addEventListener('scroll', () => {
-        // 사용자가 빠르게 휠링할 때는 스냅 지연
-        const now = scroller.scrollTop;
-        const delta = Math.abs(now - lastScrollTop);
-        lastScrollTop = now;
-        if (delta > 4) scheduleSnap();
-      }, { passive: true });
-
-      // 터치 종료시에도 스냅
-      ['touchend','mouseup','keyup'].forEach(ev => {
-        scroller.addEventListener(ev, scheduleSnap, { passive:true });
-      });
-    })();
   </script>
+</body>
+</html>
