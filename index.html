@@ -25,20 +25,20 @@
   <!-- 스냅 + 스무스 스크롤 컨테이너 -->
   <div class="snap-container">
 
-    <!-- CUT 1: HERO (배경이미지: 아래 data-src 교체) -->
-    <section class="snap-section hero parallax" data-src="img/hero.jpg">
+    <!-- CUT 1: HERO (배경이미지: data-src 교체) -->
+    <section class="snap-section hero parallax" data-src="img/hero.jpg" aria-label="브랜드 히어로">
       <div class="cut-inner">
         <div class="reveal center">
           <h1 class="hero-title">안전해서 더욱 자유로운 세상</h1>
           <p class="hero-sub">More Security, More Freedom</p>
-          <img class="hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab">
+          <img class="hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab 로고">
         </div>
         <div class="scroll-hint">아래로 스크롤 ▾</div>
       </div>
     </section>
 
     <!-- CUT 2: 안내/유의사항 -->
-    <section class="snap-section info parallax">
+    <section class="snap-section info parallax" aria-label="유의사항">
       <div class="cut-inner">
         <div class="reveal">
           <h2 class="cut-heading">면접 전 사전 설문 진행 유의사항</h2>
@@ -53,7 +53,7 @@
     </section>
 
     <!-- CUT 3: 좌측 카피 + 우측 설문 시작 폼 -->
-    <section class="snap-section form-cut parallax">
+    <section class="snap-section form-cut parallax" aria-label="설문 시작">
       <div class="cut-inner grid">
         <!-- LEFT COPY -->
         <div class="reveal">
@@ -61,7 +61,7 @@
           <p class="copy-sub">유의사항 확인 이후, 우측 패널에서 기본 정보 입력 및 설문 진행을 시작해주세요.</p>
         </div>
 
-        <!-- RIGHT FORM (기존 id/class 유지: main.js 그대로 작동) -->
+        <!-- RIGHT FORM (id/class 그대로: main.js 작동) -->
         <div class="white-card reveal">
           <h4 class="panel-title">AhnLab 채용 설문</h4>
 
@@ -112,26 +112,20 @@
       document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     });
 
-    // 2) 패럴랙스(부드럽게): requestAnimationFrame로 Y 변환 보간
+    // 2) 패럴랙스(부드러운 보간)
     (function () {
-      const ease = 0.08;            // 부드러움
-      const maxShift = 40;          // 최대 이동(px)
+      const ease = 0.08;
+      const maxShift = 40;
       const targets = [...document.querySelectorAll('.parallax')];
-      let current = 0;
-
       function loop() {
-        const scrollY = document.querySelector('.snap-container')?.scrollTop ?? window.scrollY;
-        current += (scrollY - current) * ease;
-
         const h = window.innerHeight || 1;
         targets.forEach(sec => {
           const rect = sec.getBoundingClientRect();
           const centerDist = (rect.top + rect.height / 2) - h / 2;
-          const t = Math.max(-1, Math.min(1, centerDist / (h / 2))); // -1 ~ 1
+          const t = Math.max(-1, Math.min(1, centerDist / (h / 2))); // -1~1
           const shift = -t * maxShift;
           sec.style.setProperty('--parallax', shift.toFixed(2) + 'px');
         });
-
         requestAnimationFrame(loop);
       }
       loop();
