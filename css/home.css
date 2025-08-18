@@ -76,3 +76,17 @@
 
 /* 타입 버튼 간격 */
 .home .type-buttons{ display:flex; gap:8px; flex-wrap:wrap; }
+
+/* 3컷(정보/폼)에도 히어로와 동일 톤의 딥블루 배경을 깔아줌 */
+.home .home__info::before,
+.home .home__form-cut::before{
+  content:"";
+  position:absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,0) 60%),
+    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+    #164B9F; /* 히어로와 동일 베이스 컬러 */
+}
+
+/* 섹션 내부 콘텐츠가 배경 위로 올라오도록 */
+.home .home__inner{ position:relative; z-index:1; }
