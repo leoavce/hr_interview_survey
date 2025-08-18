@@ -104,39 +104,86 @@
 
   <!-- 인터섹션 + 패럴랙스 스무딩 (기능 영향 없음) -->
   <script>
-    // 1) 섹션 등장 애니메이션
+   <script>
+    // 1) 등장 애니메이션 (그대로)
     window.addEventListener('DOMContentLoaded', () => {
       const io = new IntersectionObserver((entries) => {
         entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
       }, { threshold: .15 });
-      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+      document.querySelectorAll('.home__reveal').forEach(el => io.observe(el));
     });
 
-    // 2) 패럴랙스(부드러운 보간)
+    // 2) 패럴랙스 스무딩 (보간 적용 → 더 부드러운 이동)
     (function () {
-      const ease = 0.08;
-      const maxShift = 40;
-      const targets = [...document.querySelectorAll('.parallax')];
+      const maxShift = 40;      // 섹션당 최대 시프트(px)
+      const lerp = (a,b,t)=>a+(b-a)*t;
+      const state = new WeakMap(); // 섹션별 현재 시프트 저장
+
       function loop() {
         const h = window.innerHeight || 1;
-        targets.forEach(sec => {
+        document.querySelectorAll('.home__parallax').forEach(sec => {
           const rect = sec.getBoundingClientRect();
-          const centerDist = (rect.top + rect.height / 2) - h / 2;
-          const t = Math.max(-1, Math.min(1, centerDist / (h / 2))); // -1~1
-          const shift = -t * maxShift;
-          sec.style.setProperty('--parallax', shift.toFixed(2) + 'px');
+          const centerDist = (rect.top + rect.height/2) - h/2;
+          const t = Math.max(-1, Math.min(1, centerDist / (h/2)));
+          const target = (-t * maxShift);
+
+          const current = state.get(sec) ?? 0;
+          const next = lerp(current, target, 0.08); // 0.08로 천천히 따라붙게
+          state.set(sec, next);
+
+          sec.style.setProperty('--parallax', next.toFixed(2) + 'px');
         });
         requestAnimationFrame(loop);
       }
       loop();
     })();
 
-    // 3) 히어로 배경 이미지 세팅 (data-src 사용)
+    // 3) 히어로 배경 이미지 세팅 (그대로)
     (function () {
-      const hero = document.querySelector('.hero');
+      const hero = document.querySelector('.home__hero');
       const src = hero?.getAttribute('data-src');
       if (src) hero.style.setProperty('--hero-image', `url("${src}")`);
     })();
+
+    // 4) 부드러운 "책장 넘김" 스냅(프로시미티 + 보정 스냅)
+    (function () {
+      const scroller = document.querySelector('.home__snap-container');
+      if (!scroller) return;
+
+      let snapTimer = null;
+      let lastScrollTop = 0;
+
+      function scheduleSnap() {
+        if (snapTimer) clearTimeout(snapTimer);
+        snapTimer = setTimeout(() => {
+          const sections = [...document.querySelectorAll('.home__section')];
+          const y = scroller.scrollTop;
+          const vh = scroller.clientHeight;
+
+          // 가장 가까운 섹션 찾기
+          let best = null, bestDist = Infinity;
+          sections.forEach(sec => {
+            const top = sec.offsetTop;
+            const dist = Math.abs(top - y);
+            if (dist < bestDist) { bestDist = dist; best = top; }
+          });
+
+          // 스무스 스냅
+          if (best !== null) scroller.scrollTo({ top: best, behavior: 'smooth' });
+        }, 120); // 멈춘 뒤 120ms에 스냅
+      }
+
+      scroller.addEventListener('scroll', () => {
+        // 사용자가 빠르게 휠링할 때는 스냅 지연
+        const now = scroller.scrollTop;
+        const delta = Math.abs(now - lastScrollTop);
+        lastScrollTop = now;
+        if (delta > 4) scheduleSnap();
+      }, { passive: true });
+
+      // 터치 종료시에도 스냅
+      ['touchend','mouseup','keyup'].forEach(ev => {
+        scroller.addEventListener(ev, scheduleSnap, { passive:true });
+      });
+    })();
   </script>
-</body>
-</html>
