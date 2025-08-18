@@ -1,8 +1,8 @@
 /* ===== 홈 전용 공통 ===== */
 .home {
-  --ahn-blue: #184983;           /* 배경 메인 */
-  --hero-blue: #1c4f8f;          /* 히어로 그라데이션 상단 */
-  --text-hero: #e6eefb;          /* 히어로 텍스트 */
+  --ahn-blue: #184983;
+  --hero-blue: #1c4f8f;
+  --text-hero: #e6eefb;
   --text-hero-sub: #c8d5ea;
   --card-radius: 14px;
   --card-shadow: 0 16px 40px rgba(0,0,0,.14);
@@ -31,26 +31,13 @@
   text-align: center;
   position: relative;
 }
-.home__hero-inner{
-  transform: translateY(-4vh);
-}
+.home__hero-inner{ transform: translateY(-4vh); }
 .home__hero-title{
-  margin: 0 0 18px 0;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  font-size: clamp(22px, 4.5vw, 44px);
-  color: var(--text-hero);
+  margin: 0 0 18px 0; font-weight: 700; letter-spacing: -0.3px;
+  font-size: clamp(22px, 4.5vw, 44px); color: var(--text-hero);
 }
-.home__hero-sub{
-  margin: 0 0 40px 0;
-  color: var(--text-hero-sub);
-  font-size: clamp(14px, 2.5vw, 24px);
-}
-.home__hero-logo{
-  width: clamp(120px, 22vw, 220px);
-  height: auto;
-  opacity: .92;
-}
+.home__hero-sub{ margin: 0 0 40px 0; color: var(--text-hero-sub); font-size: clamp(14px, 2.5vw, 24px); }
+.home__hero-logo{ width: clamp(120px, 22vw, 220px); height: auto; opacity: .92; }
 
 /* 스크롤 힌트 */
 .home__scroll{
@@ -58,53 +45,101 @@
   display:flex; flex-direction:column; align-items:center; gap:8px;
   color:#d7e4fb; text-decoration:none; font-size:12px; opacity:.9;
 }
-.home__scroll svg{
-  width:24px; height:24px; fill:#d7e4fb; animation: bounce 1.6s infinite;
-}
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(5px); }
-}
+.home__scroll svg{ width:24px; height:24px; fill:#d7e4fb; animation: bounce 1.6s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
 
 /* ===== CUT 2 : FORM ===== */
 .home__form{ background: var(--ahn-blue); }
-.home__form-wrap{ width:100%; max-width:980px; margin: 0 auto; }
+
+/* 가운데 정렬 컨테이너 */
+.home__form-wrap{
+  width:100%;
+  max-width: 980px;
+  margin: 0 auto;
+
+  /* 폼·안내카드 모두 수평 중앙 */
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+}
 
 /* 상단 카피 */
-.home__form-head{ text-align:center; margin: 0 auto 20px; max-width:900px; }
+.home__form-head{ text-align:center; margin: 0 auto 18px; max-width: 820px; }
 .home__form-title{
   margin:0 0 8px 0; font-weight:700; letter-spacing:-0.3px;
   font-size:clamp(20px, 3.2vw, 28px); color:#e6eefb;
 }
 .home__form-sub{ margin:0; color:#c8d5ea; font-size:clamp(12px, 1.6vw, 14px); }
 
-/* 안내 카드 (기존 스타일 유지 + 여백 정리) */
+/* 안내 카드: 살짝 더 컴팩트 & 중앙 */
 .home__notice-card{
   background:#fff; border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
-  padding: 18px 20px; max-width: 700px; margin: 12px auto 26px;
+  padding: 16px 18px;
+  max-width: 620px;       /* ⬅ 크기 축소 */
+  width: 100%;
+  margin: 10px auto 22px; /* 상하 여백 조정 */
 }
-.home__notice-title{ font-weight:700; margin-bottom:10px; color:#0f172a; }
+.home__notice-title{ font-weight:700; margin-bottom:8px; color:#0f172a; }
 .home__notice-list{ margin:0; padding-left:18px; color:#334155; }
-.home__notice-list li{ margin: 6px 0; }
+.home__notice-list li{ margin: 4px 0; }
 
-/* 설문 시작 패널 (기능 유지) */
+/* 설문 시작 패널: 중앙 + 폭 축소 */
 .home__panel{
   background:#fff; color:#111;
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
-  padding:22px; max-width:720px; margin:0 auto;
+  padding:20px;
+  max-width: 620px;     /* ⬅ 크기 축소 */
+  width: 100%;
+  margin: 0 auto;
 }
 .home__panel-top{ display:flex; align-items:center; justify-content:space-between; }
-.home__panel-title{ margin:0; font-size:20px; font-weight:800; letter-spacing:-.2px; color:#0f172a; }
+.home__panel-title{ margin:0; font-size:18px; font-weight:800; letter-spacing:-.2px; color:#0f172a; }
 .home__divider{ border:0; height:1px; background:#eef2f7; margin:10px 0 6px; }
-.home__panel-subtitle{ margin:8px 0 10px; font-size:14px; color:#64748b; }
+.home__panel-subtitle{ margin:8px 0 10px; font-size:13px; color:#64748b; }
 
-/* 하단 푸터 */
-.home__footer{ margin: 18px auto 0; text-align:center; color:#cbd5e1; font-size: 12px; }
+/* 유형 버튼 가운데 정렬 */
+.type-buttons{
+  display:flex; justify-content:center; gap:10px; flex-wrap:wrap;
+}
 
-/* 반응형 */
-@media (max-width: 640px){
-  .home__panel{ padding:18px; }
-  .home__notice-card{ padding:16px 18px; }
+/* ✅ 폼 라인: 라벨/입력 한 줄 배치 */
+.home__panel .form-group{
+  display:grid;
+  grid-template-columns: 150px 1fr;   /* 라벨 150px + 입력 */
+  align-items:center;
+  gap: 8px 12px;
+  margin: 10px 0;
+}
+.home__panel .form-group label{
+  margin:0; color:#0f172a; font-weight:600;
+}
+.home__panel .form-group input{
+  width:100%;
+}
+.home__panel .form-group .hint{
+  grid-column: 2;     /* 힌트는 입력칸 아래 */
+  color:#94a3b8;
+}
+
+/* '응답 시작하기' 가운데 */
+.form-actions{
+  margin-top:18px;
+  display:flex; flex-direction:column; align-items:center;
+}
+
+/* 푸터 */
+.home__footer{ margin: 16px auto 0; text-align:center; color:#cbd5e1; font-size: 12px; }
+
+/* 반응형: 모바일에서는 라벨/입력 세로 쌓기 */
+@media (max-width: 540px){
+  .home__panel{ padding:16px; }
+  .home__notice-card{ padding:14px 16px; }
+  .home__panel .form-group{
+    grid-template-columns: 1fr;
+  }
+  .home__panel .form-group .hint{
+    grid-column: 1;
+  }
 }
