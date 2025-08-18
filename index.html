@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AhnLab 채용 설문</title>
 
-  <!-- 폰트 & 기본 스타일(공용) -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <!-- 폰트 & 기본 스타일 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
-
-  <!-- ✅ 홈 전용 스타일(이 파일만 index에서 로드) -->
+  <!-- 홈(인트로) 전용 스타일: 설문/관리자와 충돌 방지 -->
   <link rel="stylesheet" href="css/home.css"/>
 
-  <!-- Firebase (compat) -->
+  <!-- Firebase (compat CDN) -->
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -20,91 +19,74 @@
 
   <!-- 앱 초기화 -->
   <script defer src="js/firebase-init.js"></script>
-  <!-- 페이지 스크립트(기존 기능 유지) -->
+
+  <!-- 페이지 스크립트 (기존 기능 유지) -->
   <script defer src="js/main.js"></script>
 </head>
-<body class="home">
-  <!-- 스냅 + 스무스 스크롤 컨테이너 -->
-  <div class="home__snap-container">
+<body class="bg">
 
-    <!-- CUT 1: HERO (배경이미지: 아래 data-src 교체) -->
-    <section class="home__section home__hero home__parallax" data-src="img/hero.jpg">
-      <div class="home__inner">
-        <div class="home__reveal home__center">
-          <h1 class="home__hero-title">안전해서 더욱 자유로운 세상</h1>
-          <p class="home__hero-sub">More Security, More Freedom</p>
-          <img class="home__hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab">
-        </div>
-        <div class="home__scroll-hint">아래로 스크롤 ▾</div>
-      </div>
-    </section>
-
-    <!-- CUT 2: 안내/유의사항 -->
-    <section class="home__section home__info home__parallax">
-      <div class="home__inner">
-        <div class="home__reveal">
-          <h2 class="home__heading">면접 전 사전 설문 진행 유의사항</h2>
-          <div class="home__note-list">
-            <div class="home__note-item">1. 예시 텍스트</div>
-            <div class="home__note-item">2. 예시 텍스트</div>
-            <div class="home__note-item">3. 예시 텍스트</div>
-            <div class="home__note-item">4. 예시 텍스트</div>
-          </div>
+  <!-- ===== 1컷: 히어로 ===== -->
+  <section class="home home__hero home__section home__parallax" data-src="img/hero.jpg">
+    <div class="home__inner">
+      <div class="home__hero-copy home__reveal">
+        <h1 class="home__title">AhnLab 채용 설문</h1>
+        <p class="home__subtitle">지원자님의 이야기로 채용 여정을 시작합니다.</p>
+        <div class="home__cta">
+          <a href="#apply" class="btn primary">응답 시작하기</a>
+          <button type="button" class="home__scroll-indicator" aria-label="아래로 스크롤">
+            ↓
+          </button>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- CUT 3: 좌측 카피 + 우측 설문 시작 폼 -->
-    <section class="home__section home__form-cut home__parallax">
-      <div class="home__inner home__grid">
-        <!-- LEFT COPY -->
-        <div class="home__reveal">
-          <h3 class="home__copy-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</h3>
-          <p class="home__copy-sub">유의사항 확인 이후, 우측 패널에서 기본 정보 입력 및 설문 진행을 시작해주세요.</p>
-        </div>
+  <!-- ===== 2컷: 폼 (기존 기능 그대로) ===== -->
+  <section id="apply" class="home home__form-cut home__section">
+    <div class="container card home__form-card">
+      <h2 class="title">지원 정보 입력</h2>
 
-        <!-- RIGHT FORM (기존 id/class 유지: main.js 그대로 작동) -->
-        <div class="home__card home__reveal">
-          <h4 class="home__panel-title">AhnLab 채용 설문</h4>
-
-          <div class="section" style="margin-top:10px;">
-            <h5 class="home__panel-subtitle">지원 유형을 선택하세요</h5>
-            <div class="type-buttons">
-              <button class="btn type" data-type="신입">신입 지원</button>
-              <button class="btn type" data-type="경력">경력 지원</button>
-            </div>
-          </div>
-
-          <form id="applyForm" class="section" novalidate>
-            <h5 class="home__panel-subtitle">기본 정보 입력</h5>
-            <div class="form-group" style="margin-bottom: 12px;">
-              <label for="name">이름</label>
-              <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
-            </div>
-
-            <div class="form-group">
-              <label for="birth">생년월일 (YYYYMMDD)</label>
-              <input id="birth" name="birth" type="text" inputmode="numeric" pattern="\\d{8}" maxlength="8" placeholder="예: 19900101" required />
-              <small class="hint">8자리(숫자)만 입력 가능</small>
-            </div>
-
-            <div class="form-actions">
-              <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
-              <button type="button"
-                style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
-                onclick="location.href='admin.html'">
-                관리자 페이지
-              </button>
-            </div>
-            <div id="errorMessage" class="error" style="display:none;"></div>
-          </form>
+      <!-- 지원 유형 선택 -->
+      <div class="section">
+        <h3 class="section-title">지원 유형을 선택하세요</h3>
+        <div class="type-buttons">
+          <button class="btn type" data-type="신입">신입 지원</button>
+          <button class="btn type" data-type="경력">경력 지원</button>
         </div>
       </div>
-    </section>
 
-  </div>
+      <!-- 기본 정보 입력 -->
+      <form id="applyForm" class="section" novalidate>
+        <h3 class="section-subtitle home-note">아래 정보를 정확히 입력해주세요</h3>
 
-  <!-- 홈 전용 스크립트(디자인용, 기능 영향 없음) -->
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label for="name">이름</label>
+          <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
+        </div>
+
+        <div class="form-group">
+          <label for="birth">생년월일 (YYYYMMDD)</label>
+          <input id="birth" name="birth" type="text" inputmode="numeric" pattern="\\d{8}" maxlength="8" placeholder="예: 19900101" required />
+          <small class="hint">8자리(숫자)만 입력 가능</small>
+        </div>
+
+        <div class="form-actions">
+          <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
+
+          <!-- 관리자 링크: 버튼이 아닌 텍스트 링크 유지 -->
+          <button type="button"
+                  style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
+                  onclick="location.href='admin.html'">
+            관리자 페이지
+          </button>
+        </div>
+
+        <div id="errorMessage" class="error" style="display:none;"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 홈 전용 스크립트: 패럴랙스/스냅(부드러운 책장 넘김) -->
   <script>
     // 1) 등장 애니메이션
     window.addEventListener('DOMContentLoaded', () => {
@@ -116,16 +98,22 @@
 
     // 2) 패럴랙스 스무딩
     (function () {
-      const ease = 0.08, maxShift = 40;
-      const targets = [...document.querySelectorAll('.home__parallax')];
+      const maxShift = 40;
+      const lerp = (a,b,t)=>a+(b-a)*t;
+      const state = new WeakMap();
       function loop() {
         const h = window.innerHeight || 1;
-        targets.forEach(sec => {
+        document.querySelectorAll('.home__parallax').forEach(sec => {
           const rect = sec.getBoundingClientRect();
-          const centerDist = (rect.top + rect.height / 2) - h / 2;
-          const t = Math.max(-1, Math.min(1, centerDist / (h / 2)));
-          const shift = -t * maxShift;
-          sec.style.setProperty('--parallax', shift.toFixed(2) + 'px');
+          const centerDist = (rect.top + rect.height/2) - h/2;
+          const t = Math.max(-1, Math.min(1, centerDist / (h/2)));
+          const target = (-t * maxShift);
+
+          const current = state.get(sec) ?? 0;
+          const next = lerp(current, target, 0.08);
+          state.set(sec, next);
+
+          sec.style.setProperty('--parallax', next.toFixed(2) + 'px');
         });
         requestAnimationFrame(loop);
       }
@@ -137,6 +125,52 @@
       const hero = document.querySelector('.home__hero');
       const src = hero?.getAttribute('data-src');
       if (src) hero.style.setProperty('--hero-image', `url("${src}")`);
+    })();
+
+    // 4) 스냅 보정: 스크롤 멈추면 가장 가까운 섹션으로 살짝 스무스 스냅
+    (function () {
+      const scroller = document.scrollingElement || document.documentElement;
+      let timer = null, lastY = 0;
+
+      function nearestSectionTop() {
+        const secs = [...document.querySelectorAll('.home__section')];
+        const y = window.scrollY || window.pageYOffset;
+        let bestTop = null, bestDist = Infinity;
+        secs.forEach(sec => {
+          const top = sec.getBoundingClientRect().top + y;
+          const dist = Math.abs(top - y);
+          if (dist < bestDist) { bestDist = dist; bestTop = top; }
+        });
+        return bestTop;
+      }
+
+      function schedule() {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          const top = nearestSectionTop();
+          if (top != null) window.scrollTo({ top, behavior: 'smooth' });
+        }, 120);
+      }
+
+      window.addEventListener('scroll', () => {
+        const now = window.scrollY || window.pageYOffset;
+        const delta = Math.abs(now - lastY);
+        lastY = now;
+        if (delta > 4) schedule();
+      }, { passive: true });
+
+      ['touchend','mouseup','keyup'].forEach(ev => {
+        window.addEventListener(ev, schedule, { passive:true });
+      });
+
+      // 히어로 아래 화살표 클릭 시 폼으로 스크롤
+      const arrow = document.querySelector('.home__scroll-indicator');
+      if (arrow) {
+        arrow.addEventListener('click', () => {
+          const target = document.getElementById('apply');
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
     })();
   </script>
 </body>
