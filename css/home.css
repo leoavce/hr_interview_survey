@@ -1,0 +1,78 @@
+/* ===== 홈(index) 전용: 다른 페이지 영향 없도록 전부 .home 스코프 ===== */
+.home { background:#164B9F; }
+
+/* 스냅 + 자연스러운 스크롤 */
+.home .home__snap-container{
+  height:100vh;
+  overflow-y:auto;
+  scroll-snap-type:y proximity;
+  scroll-behavior:smooth;
+}
+.home .home__section{
+  min-height:100vh;
+  scroll-snap-align:start;
+  display:flex; align-items:center;
+  position:relative;
+  transform: translateY(var(--parallax, 0px));
+}
+
+.home .home__inner{ width:min(1100px, 92%); margin:0 auto; padding:48px 0; }
+
+/* 등장 애니메이션 */
+.home .home__reveal{ opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease; }
+.home .in-view{ opacity:1; transform:translateY(0); }
+
+/* ===== CUT #1 : HERO ===== */
+.home .home__hero{ color:#fff; --hero-image:none; }
+.home .home__hero::before{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(255,255,255,.12), rgba(0,0,0,.0) 60%),
+    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+    var(--hero-image) center/cover no-repeat;
+  filter:saturate(1.05);
+}
+.home .home__center{ text-align:center; position:relative; z-index:1; }
+.home .home__hero-title{ margin:0; font-size:40px; font-weight:800; letter-spacing:-.3px; }
+.home .home__hero-sub{ margin:10px 0 0 0; font-weight:400; opacity:.9; }
+.home .home__hero-logo{ margin-top:44px; height:44px; opacity:.95; filter:drop-shadow(0 6px 20px rgba(0,0,0,.25)); }
+.home .home__scroll-hint{
+  position:absolute; left:50%; bottom:22px; transform:translateX(-50%);
+  color:#fff; font-size:13px; opacity:.75; z-index:1;
+  animation:home-hint 1.8s ease-in-out infinite;
+}
+@keyframes home-hint{ 0%{transform:translate(-50%,0)} 50%{transform:translate(-50%,6px)} 100%{transform:translate(-50%,0)} }
+
+/* ===== CUT #2 : INFO ===== */
+.home .home__info{ color:#fff; }
+.home .home__heading{ margin:0 0 18px 0; font-size:26px; font-weight:800; letter-spacing:-.2px; }
+.home .home__note-list{ display:grid; gap:12px; }
+.home .home__note-item{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.25);
+  color:#fff;
+  padding:12px 14px;
+  border-radius:10px;
+  backdrop-filter:saturate(140%) blur(0.5px);
+  font-size:15px;
+}
+
+/* ===== CUT #3 : FORM ===== */
+.home .home__form-cut{ color:#fff; }
+.home .home__grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:28px; align-items:center; }
+@media (max-width: 900px){ .home .home__grid{ grid-template-columns:1fr; } }
+
+.home .home__copy-title{ margin:0 0 8px 0; font-size:22px; font-weight:800; }
+.home .home__copy-sub{ margin:0; opacity:.85; font-size:13px; }
+
+.home .home__card{
+  background:#fff; color:#111; border-radius:14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  padding:22px;
+}
+.home .home__panel-title{ margin:0 0 12px 0; font-weight:800; }
+.home .home__panel-subtitle{ margin:8px 0 10px 0; font-weight:700; }
+
+/* 타입 버튼 간격 */
+.home .type-buttons{ display:flex; gap:8px; flex-wrap:wrap; }
