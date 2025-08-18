@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AhnLab 채용 설문</title>
 
-  <!-- 폰트 & 공용 기본 스타일 -->
+  <!-- 폰트 & 공용 스타일 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
 
-  <!-- 홈(인덱스) 전용 스타일 -->
+  <!-- 홈 전용 스타일: 이 파일만 홈(index)에서 로드 -->
   <link rel="stylesheet" href="css/home.css"/>
 
   <!-- Firebase (compat) -->
@@ -18,30 +18,39 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
-  <!-- 앱 초기화 & 기존 기능 -->
+  <!-- 앱 초기화 및 기존 페이지 스크립트 (기능 유지) -->
   <script defer src="js/firebase-init.js"></script>
   <script defer src="js/main.js"></script>
 </head>
 <body class="home">
-  <!-- 스냅+스무스 스크롤 컨테이너 -->
+  <!-- 스냅/스무스 컨테이너 -->
   <div class="home__snap">
 
     <!-- CUT 1 : HERO -->
     <section class="home__section home__hero">
       <div class="home__hero-inner">
-        <div class="home__hero-lines">
-          <h1>안전해서 더욱 자유로운 세상</h1>
-          <p>More Security, More Freedom</p>
-        </div>
-        <img class="home__logo" src="img/ahnlab-mark.svg" alt="AhnLab">
-        <a href="#start" class="home__scroll">아래로 스크롤 ▾</a>
+        <h1 class="home__hero-title">안전해서 더욱 자유로운 세상</h1>
+        <p class="home__hero-sub">More Security, More Freedom</p>
+        <img class="home__hero-logo" src="img/ahnlab-mark.svg" alt="AhnLab" />
       </div>
+
+      <!-- 아래로 스크롤 힌트 (클릭 시 2컷으로 부드럽게 이동) -->
+      <a href="#start" class="home__scroll">
+        <span>스크롤하여 시작</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16.5 4.5 9l1.4-1.4L12 13.7l6.1-6.1L19.5 9z"/></svg>
+      </a>
     </section>
 
-    <!-- CUT 2 : FORM (기존 마크업 유지) -->
+    <!-- CUT 2 : FORM -->
     <section id="start" class="home__section home__form">
       <div class="home__form-wrap">
-        <!-- 상단 안내 카드(디자인 전용 – 클래스 이름 충돌 없음) -->
+        <!-- 상단 카피 -->
+        <header class="home__form-head">
+          <h2 class="home__form-title">지원자님과 함께 만들어 갈 내일의 안랩을 기대합니다.</h2>
+          <p class="home__form-sub">유의사항 확인 이후 우측 패널에서 정보 기입 및 설문 진행을 시작해주세요.</p>
+        </header>
+
+        <!-- 설문 전 사전 안내 (카드 스타일 유지) -->
         <div class="home__notice-card">
           <div class="home__notice-title">설문 전 사전 안내</div>
           <ul class="home__notice-list">
@@ -50,11 +59,14 @@
           </ul>
         </div>
 
-        <!-- 기존 패널(기능 그대로) -->
+        <!-- 설문 시작 패널 : 기존 마크업/ID/클래스 유지 (main.js 그대로 동작) -->
         <div class="home__panel">
-          <h4 class="home__panel-title">AhnLab 채용 설문</h4>
+          <div class="home__panel-top">
+            <h4 class="home__panel-title">2차 면접 사전 설문</h4>
+          </div>
+          <hr class="home__divider" />
 
-          <div class="section" style="margin-top:10px;">
+          <div class="section" style="margin-top:12px;">
             <h5 class="home__panel-subtitle">지원 유형을 선택하세요</h5>
             <div class="type-buttons">
               <button class="btn type" data-type="신입">신입 지원</button>
@@ -67,19 +79,19 @@
 
             <div class="form-group" style="margin-bottom:12px;">
               <label for="name">이름</label>
-              <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required/>
+              <input id="name" name="name" type="text" placeholder="이름을 입력하세요" required />
             </div>
 
             <div class="form-group">
               <label for="birth">생년월일 (YYYYMMDD)</label>
-              <input id="birth" name="birth" type="text" inputmode="numeric" pattern="\\d{8}" maxlength="8" placeholder="예: 19900101" required/>
+              <input id="birth" name="birth" type="text" inputmode="numeric" pattern="\\d{8}" maxlength="8" placeholder="예: 19900101" required />
               <small class="hint">8자리(숫자)만 입력 가능</small>
             </div>
 
             <div class="form-actions">
               <button id="startBtn" class="btn primary" type="submit" disabled>응답 시작하기</button>
               <button type="button"
-                style="margin-top:10px; display:block; background:none; border:none; color:#888; font-size:14px; cursor:pointer;"
+                style="margin-top:10px; display:block; background:none; border:none; color:#8a95a7; font-size:14px; cursor:pointer;"
                 onclick="location.href='admin.html'">
                 관리자 페이지
               </button>
@@ -89,25 +101,25 @@
           </form>
         </div>
 
-        <footer class="home__footer">Copyright © [2025] [Leo_AhnLab_HR]. All rights reserved.</footer>
+        <footer class="home__footer">
+          Copyright © [2025] [Leo_AhnLab_HR]. All rights reserved.
+        </footer>
       </div>
     </section>
+
   </div>
 
-  <!-- 스크롤·등장 애니메이션(디자인용, 기능 영향 없음) -->
+  <!-- 홈 전용(디자인용) 스크립트: 추가 기능 없음 -->
   <script>
-    // 1) 섹션 등장 페이드업
-    window.addEventListener('DOMContentLoaded', () => {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); });
-      }, { threshold: .15 });
-      document.querySelectorAll('.home__section').forEach(el => io.observe(el));
-    });
-
-    // 2) 히어로 → 폼 부드러운 점프(스크롤 힌트 클릭 시)
-    document.querySelector('.home__scroll')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('#start')?.scrollIntoView({ behavior: 'smooth' });
+    // 1) 스크롤 스냅 + 앵커 스무스 이동(브라우저 기본 + 보정)
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const id = a.getAttribute('href');
+        const el = document.querySelector(id);
+        if(!el) return;
+        e.preventDefault();
+        el.scrollIntoView({ behavior:'smooth', block:'start' });
+      });
     });
   </script>
 </body>
