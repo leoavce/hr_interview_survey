@@ -133,7 +133,6 @@ input:focus, textarea:focus {
 @keyframes hint{ 0%{transform:translate(-50%,0)} 50%{transform:translate(-50%,6px)} 100%{transform:translate(-50%,0)} }
 
 /* --- CUT #2: INFO --- */
-.info{ color:#fff; }
 .cut-heading{ margin:0 0 20px 0; font-size:28px; font-weight:800; letter-spacing:-.2px; }
 .note-list{ display:grid; gap:12px; }
 .note-item{
@@ -164,3 +163,4 @@ input:focus, textarea:focus {
 
 /* 타입 버튼 묶음 간격 */
 .type-buttons{ display:flex; gap:8px; flex-wrap:wrap; }
+
