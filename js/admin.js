@@ -299,7 +299,7 @@
             <div style="flex:0 0 auto;margin-top:4px;">● 필요역량 :</div>
             <div style="flex:1;min-width:220px;${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.needed||'')}</div>
           </div>
-          <div style="margin-top:6px;">● 본인의 역량 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> 점 / 10점 만점</div>
+          <div style="margin-top:6px;">● 본인의 역량 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> 점 / 10점</div>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;flex-wrap:wrap;">
             <div style="flex:0 0 auto;margin-top:4px;">● 필요 역량을 갖추기 위한 과정(노력) :</div>
             <div style="flex:1;min-width:220px;${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.effort||'')}</div>
@@ -406,3 +406,4 @@
     }[m]));
   }
 })();
+
