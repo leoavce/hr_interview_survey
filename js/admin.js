@@ -14,9 +14,9 @@
   }
 
   // DOM
-  const loginForm = document.getElementById('adminLogin');
-  const adminPanel = document.getElementById('adminPanel');
-  const loginError = document.getElementById('loginError');
+  const loginForm   = document.getElementById('adminLogin');
+  const adminPanel  = document.getElementById('adminPanel');
+  const loginError  = document.getElementById('loginError');
 
   const totalCountEl = document.getElementById('totalCount');
   const newCountEl   = document.getElementById('newCount');
@@ -156,17 +156,14 @@
     `;
   }
 
-  // ===== (추가) 래핑/불릿/다중페이지 헬퍼 (디자인 강화) =====
+  // ===== (추가) 래핑/불릿/다중페이지 헬퍼 =====
   function _wrapTextHTML(txt='') {
-    // 답변 텍스트 자체는 pre-wrap/word-break 보장
     return `<div style="white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(txt)}</div>`;
   }
 
-  // 답변 박스 공통 스타일 (반복 사용)
   const ANSWER_BOX_STYLE =
     'margin-top:6px;padding:8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;';
 
-  // 불릿형(①②③) 라인: 레이블 Bold + 답변 박스화
   function _bulletLine(label, txt) {
     return `
       <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;">
@@ -212,7 +209,7 @@
     return pdf.output('blob');
   }
 
-  // ===== PDF 생성 (질문 Bold/답변 박스화만 반영, 나머지 로직 동일) =====
+  // ===== PDF 생성 (외곽 테두리 추가 / 페이지 잘림은 위 분할 로직으로 방지) =====
   async function generatePdfFromDoc(data) {
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
@@ -242,8 +239,8 @@
 
     const typeTable = typeTableHtml(scores);
 
-    // 질문은 <strong>으로 강조, 답변은 answer-box 스타일로 감싼다.
-    let bodyHtml = headerHtml + `<ol style="font-size:14px; line-height:1.7; padding-left:18px; margin:0;">`;
+    // 본문(질문/답변) — 기존 스타일 유지
+    let bodyHtml = `<ol style="font-size:14px; line-height:1.7; padding-left:18px; margin:0;">`;
 
     if (data.type === '신입') {
       bodyHtml += `
@@ -349,14 +346,21 @@
       `;
     }
 
-    bodyHtml += `</ol><hr style="margin:12px 0;">${typeTable}`;
-    wrap.innerHTML = bodyHtml;
+    // === 외곽 테두리 컨테이너에 전체 내용 래핑 ===
+    wrap.innerHTML = `
+      <div style="border:2px solid #111; border-radius:10px; padding:20px;">
+        ${headerHtml}
+        ${bodyHtml}
+        <hr style="margin:12px 0;">
+        ${typeTable}
+      </div>
+    `;
 
     document.body.appendChild(wrap);
     const canvas = await html2canvas(wrap, { scale: 2, backgroundColor: '#fff' });
     document.body.removeChild(wrap);
 
-    // 자동 다중 페이지 PDF
+    // 자동 다중 페이지 PDF (잘림 방지)
     return await _canvasToMultipagePdf(canvas);
   }
 
