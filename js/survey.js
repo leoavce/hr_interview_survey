@@ -160,15 +160,15 @@
       <div class="q">
         <label class="q-label">3. 본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 세가지 정도 기입해 주십시오.</label>
         <div class="grid-1">
-          <textarea name="e_strength1" required placeholder="뛰어난 점 첫 번째"></textarea>
-          <textarea name="e_strength2" required placeholder="뛰어난 점 두 번째"></textarea>
-          <textarea name="e_strength3" required placeholder="뛰어난 점 세 번째"></textarea>
+          <textarea name="e_strength1" required placeholder="1.뛰어난 점 첫 번째"></textarea>
+          <textarea name="e_strength2" required placeholder="2.뛰어난 점 두 번째"></textarea>
+          <textarea name="e_strength3" required placeholder="3.뛰어난 점 세 번째"></textarea>
         </div>
       </div>
 
       <div class="q">
         <label class="q-label">4. 나를 표현하는 단어 3가지를 기입해 주십시오.</label>
-        <textarea name="e_words" required placeholder="나를 표현하는 단어 3가지 (예: 도전적, 창의적, 협력적)"></textarea>
+        <textarea name="e_words" required placeholder="나를 표현하는 단어 3가지를 간략히 입력해주세요"></textarea>
       </div>
 
       <div class="q">
@@ -402,3 +402,4 @@
     }
   });
 })();
+
