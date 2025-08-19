@@ -1,17 +1,17 @@
 // js/survey.js
 (function () {
-  const surveyForm = document.getElementById('surveyForm');
-  const titleEl = document.getElementById('surveyTitle');
-  const infoEl = document.getElementById('candidateInfo');
-  const errorEl = document.getElementById('errorMessage');
-  const successBox = document.getElementById('successBox');
+  const surveyForm   = document.getElementById('surveyForm');
+  const titleEl      = document.getElementById('surveyTitle');
+  const infoEl       = document.getElementById('candidateInfo');
+  const errorEl      = document.getElementById('errorMessage');
+  const successBox   = document.getElementById('successBox');
 
-  const essaySection = document.getElementById('essaySection');
+  const essaySection  = document.getElementById('essaySection');
   const choiceSection = document.getElementById('choiceSection');
 
   // 세션에서 지원자 정보
-  const type = sessionStorage.getItem('applyType'); // "신입" / "경력"
-  const name = sessionStorage.getItem('applyName');
+  const type  = sessionStorage.getItem('applyType'); // "신입" / "경력"
+  const name  = sessionStorage.getItem('applyName');
   const birth = sessionStorage.getItem('applyBirth');
 
   if (!type || !name || !birth) {
@@ -20,7 +20,7 @@
   }
 
   titleEl.textContent = `${type} 설문 응답`;
-  infoEl.textContent = `${name} (${birth}) · ${type}`;
+  infoEl.textContent  = `${name} (${birth}) · ${type}`;
 
   // ========= 선택형 40쌍 (그대로 유지) =========
   const choicePairs = [
@@ -209,6 +209,7 @@
             </div>
           </div>
         </div>
+      </div>
     `;
   }
 
@@ -277,15 +278,31 @@
     try {
       await ensureFirebaseReady();
 
-      // 1) 선택형 수집
+      // (A) 공통 강제 검증: required 붙은 모든 필드 확인 (서술형 포함)
+      const requiredFields = surveyForm.querySelectorAll('input[required], textarea[required], select[required]');
+      for (const field of requiredFields) {
+        const val = (field.value || '').toString().trim();
+        if (!val) {
+          const qLabel = field.closest('.q')?.querySelector('.q-label')?.textContent?.trim();
+          throw new Error((qLabel ? `${qLabel}을(를) ` : '') + '입력해주세요.');
+        }
+        if (field.reportValidity && !field.reportValidity()) {
+          throw new Error('입력값을 다시 확인해주세요.');
+        }
+      }
+
+      // (B) 선택형 40문항 수집(미선택시 명확히 문항 번호 안내)
       const selects = [];
-      for(let i=0;i<40;i++){
-        const sel = surveyForm[`select${i+1}`].value;
-        if(!sel){ throw new Error(`선택형 ${i+1}번을 선택해주세요.`); }
+      for (let i = 0; i < 40; i++) {
+        const node = surveyForm[`select${i+1}`];      // RadioNodeList
+        const sel  = node ? node.value : '';
+        if (!sel) {
+          throw new Error(`선택형 ${i+1}번을 선택해주세요.`);
+        }
         selects.push(parseInt(sel, 10));
       }
 
-      // 2) 서술형(구조화) 수집
+      // (C) 서술형(구조화) 수집 (원본 로직 유지)
       let form = {};
       if (type === '신입') {
         form = {
@@ -348,10 +365,10 @@
         };
       }
 
-      // 3) 분류
+      // (D) 분류
       const result = classifyType(selects);
 
-      // 4) 저장 데이터(기존 필드 유지 + form 추가)
+      // (E) 저장 데이터(기존 필드 유지 + form 추가)
       const docData = {
         type,
         name,
@@ -366,9 +383,6 @@
       // Firestore 저장
       await db.collection('responses').add(docData);
 
-      // 응답자 측은 PDF 업로드/링크 제공 안 함 (관리자만 생성)
-      // if (window.USE_STORAGE) { ... } // 필요 시 나중에 활성화
-
       // 완료 처리
       surveyForm.style.display = 'none';
       successBox.style.display = 'block';
@@ -376,13 +390,15 @@
       console.error(err);
       errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err.message || err);
       errorEl.style.display = 'block';
+      // 에러 위치로 스크롤(가능하면)
+      const firstInvalid = surveyForm.querySelector(':invalid') || surveyForm.querySelector('input[required],textarea[required]');
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstInvalid.focus();
+      }
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = '설문 제출';
     }
   });
 })();
-
-
-
-
