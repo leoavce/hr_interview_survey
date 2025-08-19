@@ -132,23 +132,23 @@
     const A = Number(scores?.A||0), B = Number(scores?.B||0),
           C = Number(scores?.C||0), D = Number(scores?.D||0);
     return `
-      <div style="margin-top:8px;">
-        <div style="font-size:13px; margin-bottom:6px;">※ 선택형 설문 결과</div>
-        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <div style="margin-top:6px;">
+        <div style="font-size:12px; margin-bottom:4px;">※ 선택형 설문 결과</div>
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
           <thead>
             <tr>
-              <th style="border:1px solid #ccc; padding:6px;">A형</th>
-              <th style="border:1px solid #ccc; padding:6px;">B형</th>
-              <th style="border:1px solid #ccc; padding:6px;">C형</th>
-              <th style="border:1px solid #ccc; padding:6px;">D형</th>
+              <th style="border:1px solid #ccc; padding:4px;">A형</th>
+              <th style="border:1px solid #ccc; padding:4px;">B형</th>
+              <th style="border:1px solid #ccc; padding:4px;">C형</th>
+              <th style="border:1px solid #ccc; padding:4px;">D형</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style="border:1px solid #ccc; padding:8px; text-align:center;">${A}</td>
-              <td style="border:1px solid #ccc; padding:8px; text-align:center;">${B}</td>
-              <td style="border:1px solid #ccc; padding:8px; text-align:center;">${C}</td>
-              <td style="border:1px solid #ccc; padding:8px; text-align:center;">${D}</td>
+              <td style="border:1px solid #ccc; padding:6px; text-align:center;">${A}</td>
+              <td style="border:1px solid #ccc; padding:6px; text-align:center;">${B}</td>
+              <td style="border:1px solid #ccc; padding:6px; text-align:center;">${C}</td>
+              <td style="border:1px solid #ccc; padding:6px; text-align:center;">${D}</td>
             </tr>
           </tbody>
         </table>
@@ -156,18 +156,20 @@
     `;
   }
 
-  // ===== (추가) 래핑/불릿/다중페이지 헬퍼 =====
+  // 텍스트 줄바꿈 보장
   function _wrapTextHTML(txt='') {
     return `<div style="white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(txt)}</div>`;
   }
 
+  // 답변 박스(컴팩트)
   const ANSWER_BOX_STYLE =
-    'margin-top:6px;padding:8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;';
+    'margin-top:4px;padding:6px 8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;';
 
+  // ①/②/③ 불릿 라인
   function _bulletLine(label, txt) {
     return `
-      <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;">
-        <div style="width:18px;flex:0 0 18px;text-align:left;font-weight:700;">${label}</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-top:4px;">
+        <div style="width:16px;flex:0 0 16px;text-align:left;font-weight:700;">${label}</div>
         <div style="flex:1;min-width:0;${ANSWER_BOX_STYLE}">
           ${_wrapTextHTML(txt)}
         </div>
@@ -175,41 +177,75 @@
     `;
   }
 
+  // “라벨 : [답변박스]” 한 줄 컴팩트
+  function _inlineRow(label, txt) {
+    return `
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-top:4px;">
+        <div style="flex:0 0 auto;font-weight:700;">${label}</div>
+        <div style="flex:1;min-width:0;${ANSWER_BOX_STYLE}">
+          ${_wrapTextHTML(txt)}
+        </div>
+      </div>
+    `;
+  }
+
+  // ===== 캔버스 → 멀티페이지 PDF (페이지 프레임 + 오버랩) =====
   async function _canvasToMultipagePdf(canvas) {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
 
-    const margin = 20;
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const drawW = pageW - margin * 2;
-    const scale = drawW / canvas.width;
-    const pageInnerHpt = pageH - margin * 2;
-    const sliceHpx = Math.floor(pageInnerHpt / scale);
+    const margin   = 18; // 살짝 더 타이트하게(상단 당김 효과)
+    const pageW    = Math.round(pdf.internal.pageSize.getWidth());
+    const pageH    = Math.round(pdf.internal.pageSize.getHeight());
+    const drawW    = pageW - margin * 2;
+    const scale    = drawW / canvas.width;
+    const innerHpt = pageH - margin * 2;
+
+    // 잘림 완화: 페이지 간 6px 오버랩
+    const overlapPx = 6;
+    const sliceHpx  = Math.floor(innerHpt / scale);
 
     const tmp = document.createElement('canvas');
     const ctx = tmp.getContext('2d');
 
-    let y = 0, first = true;
-    while (y < canvas.height) {
-      const h = Math.min(sliceHpx, canvas.height - y);
-      tmp.width  = canvas.width;
-      tmp.height = h;
-      ctx.clearRect(0,0,tmp.width,tmp.height);
-      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+    let y = 0;
+    let first = true;
 
-      const img = tmp.toDataURL('image/png');
+    while (y < canvas.height) {
+      const remain = canvas.height - y;
+      const take = Math.min(sliceHpx, remain);
+
+      tmp.width  = canvas.width;
+      tmp.height = take;
+      ctx.clearRect(0, 0, tmp.width, tmp.height);
+      ctx.drawImage(canvas, 0, y, canvas.width, take, 0, 0, canvas.width, take);
+
       if (!first) pdf.addPage();
       first = false;
 
-      const drawH = h * scale;
-      pdf.addImage(img, 'PNG', margin, margin, drawW, drawH);
-      y += h;
+      // 배경
+      pdf.setFillColor(255, 255, 255);
+      pdf.rect(0, 0, pageW, pageH, 'F');
+
+      // 이미지
+      const drawH = Math.round(take * scale);
+      pdf.addImage(tmp.toDataURL('image/png'), 'PNG',
+        Math.round(margin), Math.round(margin),
+        Math.round(drawW), drawH
+      );
+
+      // 페이지 테두리
+      pdf.setLineWidth(1);
+      pdf.setDrawColor(20);
+      pdf.rect(margin - 6, margin - 6, pageW - (margin - 6)*2, pageH - (margin - 6)*2);
+
+      y += (take - overlapPx);
     }
+
     return pdf.output('blob');
   }
 
-  // ===== PDF 생성 (외곽 테두리 추가 / 페이지 잘림은 위 분할 로직으로 방지) =====
+  // ===== PDF 생성 (디자인만 컴팩트화) =====
   async function generatePdfFromDoc(data) {
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
@@ -221,146 +257,150 @@
     wrap.style.top = '-9999px';
     wrap.style.width = '794px';
     wrap.style.background = '#fff';
-    wrap.style.padding = '28px';
+    wrap.style.padding = '18px'; // 상단 여백 살짝 당김
     wrap.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif';
     wrap.style.color = '#111';
+    wrap.style.lineHeight = '1.45';
+    wrap.style.fontSize = '13px';
 
     const title = (data.type === '신입') ? '신입사원  면접 사전 질문지' : '경력사원  면접 사전 질문지';
     const f = data.form || {};
 
+    // 이름/생년월일을 작은 박스로 표시
+    const infoBox = (label, value) =>
+      `<span style="display:inline-block;border:1px solid #ccc;border-radius:6px;padding:2px 6px;margin-right:8px;background:#fbfbfb;">
+        <strong>${label}:</strong> ${escapeHtml(value||'')}
+      </span>`;
+
     const headerHtml = `
-      <h2 style="margin:0 0 10px 0; font-size:24px; font-weight:800;">${title}</h2>
-      <div style="font-size:14px; margin:0 0 16px 0;">
-        이름: <strong>${escapeHtml(data.name)}</strong>
-        &nbsp;&nbsp;|&nbsp;&nbsp;
-        생년월일: <strong>${escapeHtml(data.birth)}</strong>
+      <h2 style="margin:0 0 6px 0; font-size:18px; font-weight:800;">${title}</h2>
+      <div style="font-size:12px; margin:0 0 8px 0;">
+        ${infoBox('이름', data.name)} ${infoBox('생년월일', data.birth)}
       </div>
     `;
 
     const typeTable = typeTableHtml(scores);
 
-    // 본문(질문/답변) — 기존 스타일 유지
-    let bodyHtml = `<ol style="font-size:14px; line-height:1.7; padding-left:18px; margin:0;">`;
+    let bodyHtml = `<ol style="padding-left:18px; margin:0;">`;
 
     if (data.type === '신입') {
       bodyHtml += `
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.dream||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 최대 3가지(1가지여도 무방함) 소개해 주십시오.</strong>
           ${_bulletLine('①', (f.strengths||[])[0]||'')}
           ${_bulletLine('②', (f.strengths||[])[1]||'')}
           ${_bulletLine('③', (f.strengths||[])[2]||'')}
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>살아오면서 성취한 것 중 타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</strong>
           ${_bulletLine('①', (f.achievements||[])[0]||'')}
           ${_bulletLine('②', (f.achievements||[])[1]||'')}
           ${_bulletLine('③', (f.achievements||[])[2]||'')}
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>지원 직무(부문)에서 성과를 내기 위해 필요한 역량이 무엇이라고 생각하시는지 기술해 주십시오.</strong>
-          <div style="margin-top:6px;">● 필요역량 :</div>
-          <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.needed||'')}</div>
-          <div style="margin-top:6px;">● 본인의 역량 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> 점 / 10점 만점</div>
-          <div style="margin-top:6px;">● 필요 역량을 갖추기 위한 과정(노력) :</div>
-          <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.effort||'')}</div>
+          ${_inlineRow('● 필요역량 :', f.competency?.needed||'')}
+          <div style="margin-top:4px;font-size:12px;">● 본인의 역량 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> / 10</div>
+          ${_inlineRow('● 필요 역량을 갖추기 위한 과정(노력) :', f.competency?.effort||'')}
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>타인이 인정(칭찬)하는 본인 성격(성향)상의 장점과 그 이유를 기술해주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.personalityStrength||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+          <div style="margin:4px 0; font-size:12px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
           <div style="${ANSWER_BOX_STYLE}">
-            ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')}<br>
-            ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
+            ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp;·&nbsp;
+            ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp;·&nbsp;
+            ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;·&nbsp;
+            ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp;·&nbsp;
+            ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp;·&nbsp;
+            ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
           </div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>안랩 외에 현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.otherOffers||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>희망연봉은?</strong>
           <div style="${ANSWER_BOX_STYLE}">최저 ${Number(f.salary?.min||0)} (만원) ~ 최고 ${Number(f.salary?.max||0)} (만원)</div>
         </li>
       `;
     } else {
+      // 경력: 기존 형태 유지(컴팩트만 적용)
       bodyHtml += `
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>직장생활에서의 성공에 대해서 정의해 보십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.successDef||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>본인 성격의 장/단점에 대해 각각 간략하게 기입해 주십시오.</strong>
-          <div style="margin-top:6px;">#장점</div>
+          <div style="margin-top:4px;">#장점</div>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.pros||'')}</div>
-          <div style="margin-top:6px;">#단점</div>
+          <div style="margin-top:4px;">#단점</div>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.cons||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 세가지 정도 기입해 주십시오.</strong>
           ${_bulletLine('①', (f.strengths||[])[0]||'')}
           ${_bulletLine('②', (f.strengths||[])[1]||'')}
           ${_bulletLine('③', (f.strengths||[])[2]||'')}
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>나를 표현하는 단어 3가지를 기입해 주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.selfWords||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>가장 큰 성취를 했던 경험과 그 때 본인이 맡았던 역할을 기술해 주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.bigAchievement||'')}</div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+          <div style="margin:4px 0; font-size:12px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
           <div style="${ANSWER_BOX_STYLE}">
-            ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp; ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
+            ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp;·&nbsp;
+            ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp;·&nbsp;
+            ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;·&nbsp;
+            ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp;·&nbsp;
+            ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp;·&nbsp;
+            ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
           </div>
         </li>
 
-        <li style="margin-bottom:12px;">
+        <li style="margin-bottom:8px;">
           <strong>연봉 정보를 기입해 주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">
-            현재연봉: ${Number(f.salary?.now||0)} (만원) <br>
+            현재연봉: ${Number(f.salary?.now||0)} (만원) &nbsp;|&nbsp;
             희망연봉: 최저 ${Number(f.salary?.min||0)} (만원) ~ 최고 ${Number(f.salary?.max||0)} (만원)
           </div>
         </li>
       `;
     }
 
-    // === 외곽 테두리 컨테이너에 전체 내용 래핑 ===
-    wrap.innerHTML = `
-      <div style="border:2px solid #111; border-radius:10px; padding:20px;">
-        ${headerHtml}
-        ${bodyHtml}
-        <hr style="margin:12px 0;">
-        ${typeTable}
-      </div>
-    `;
+    wrap.innerHTML = `${headerHtml}${bodyHtml}</ol><hr style="margin:8px 0;">${typeTable}`;
 
     document.body.appendChild(wrap);
     const canvas = await html2canvas(wrap, { scale: 2, backgroundColor: '#fff' });
     document.body.removeChild(wrap);
 
-    // 자동 다중 페이지 PDF (잘림 방지)
     return await _canvasToMultipagePdf(canvas);
   }
 
