@@ -160,8 +160,9 @@
   function _wrapTextHTML(txt='') {
     return `<div style="white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(txt)}</div>`;
   }
+  // 답변 박스: 세로 간격 소폭 축소
   const ANSWER_BOX_STYLE =
-    'margin-top:6px;padding:8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;';
+    'margin-top:6px;padding:6px 8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;line-height:1.35;';
 
   function _bulletLine(label, txt) {
     return `
@@ -174,8 +175,8 @@
     `;
   }
 
-  // ===== 멀티페이지 PDF 생성기 (안정화) =====
-  async function _canvasToMultipagePdf(canvas) {
+  // ===== 멀티페이지 PDF (안전 분기점 기반, 빈 페이지 방지) =====
+  async function _canvasToMultipagePdfSmart(canvas, guidesCanvasPx) {
     const { jsPDF } = window.jspdf;
     const pdf   = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
 
@@ -183,11 +184,13 @@
     const pageW    = Math.round(pdf.internal.pageSize.getWidth());
     const pageH    = Math.round(pdf.internal.pageSize.getHeight());
     const drawW    = pageW - margin * 2;
-    const scale    = drawW / canvas.width;
+    const scale    = drawW / canvas.width;  // canvas px → pt 변환 비율
     const innerHpt = pageH - margin * 2;
 
-    const sliceHpxBase = Math.floor(innerHpt / scale);
-    const overlapPxDefault = 6;
+    const sliceHpxBase = Math.floor(innerHpt / scale); // 페이지 내부 높이(캔버스 px)
+    const overlapPxDefault = 6;                        // 페이지간 오버랩(캔버스 px)
+    const minChunk = 50;                               // 너무 작게 자르지 않기 위한 최소 높이(px)
+    const minRemainder = 10;                           // 마지막 남은 높이가 이보다 작으면 버림
 
     const tmp = document.createElement('canvas');
     const ctx = tmp.getContext('2d');
@@ -197,8 +200,39 @@
 
     while (y < canvas.height) {
       const remain = canvas.height - y;
-      const take = Math.min(sliceHpxBase, remain);
+      if (remain <= minRemainder) break; // ★ 빈 페이지 방지
 
+      // 기본적으로 한 페이지 높이만큼 자르되,
+      // 해당 범위 내에서 가장 가까운 안전 분기점(가이드)까지로 take 조정
+      const idealEnd = y + sliceHpxBase - 4; // 살짝 여유
+      let safeEnd = -1;
+
+      if (Array.isArray(guidesCanvasPx) && guidesCanvasPx.length) {
+        // guides는 오름차순이라고 가정
+        // idealEnd 이하인 가장 큰 가이드를 찾음
+        let lo = 0, hi = guidesCanvasPx.length - 1;
+        while (lo <= hi) {
+          const mid = (lo + hi) >> 1;
+          if (guidesCanvasPx[mid] <= idealEnd) {
+            safeEnd = guidesCanvasPx[mid];
+            lo = mid + 1;
+          } else hi = mid - 1;
+        }
+      }
+
+      let take;
+      if (safeEnd > y && (safeEnd - y) >= minChunk) {
+        take = Math.min(safeEnd - y, remain);
+      } else {
+        take = Math.min(sliceHpxBase, remain);
+      }
+
+      // 마지막 페이지로 거의 다 들어가면 한 번에 마무리해서 빈 페이지 방지
+      if (remain - take <= minRemainder) {
+        take = remain;
+      }
+
+      // 실제 캔버스 조각 생성
       tmp.width  = canvas.width;
       tmp.height = take;
       ctx.clearRect(0, 0, tmp.width, tmp.height);
@@ -207,11 +241,11 @@
       if (!first) pdf.addPage();
       first = false;
 
-      // 페이지 흰 배경
+      // 배경 흰색
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, pageW, pageH, 'F');
 
-      // 이미지(JPEG로 삽입해 메모리 절감)
+      // 이미지 삽입(JPEG로 메모리 절약)
       const drawH = Math.round(take * scale);
       const img   = tmp.toDataURL('image/jpeg', 0.9);
       pdf.addImage(img, 'JPEG',
@@ -227,15 +261,16 @@
       if (pdf.roundedRect) pdf.roundedRect(frameX, frameY, frameW, frameH, 8, 8);
       else pdf.rect(frameX, frameY, frameW, frameH);
 
-      // 다음 슬라이스로 이동 (마지막 조각이면 오버랩 없음)
+      // 다음 위치로
       const overlapThis = (remain <= overlapPxDefault) ? 0 : overlapPxDefault;
-      const advance = Math.max(1, take - overlapThis); // 0 이하 방지 → 무한루프 차단
+      const advance = Math.max(1, take - overlapThis);
       y += advance;
     }
+
     return pdf.output('blob');
   }
 
-  // ===== PDF 생성 (디자인 유지 + 안정화된 렌더링) =====
+  // ===== PDF 생성 (디자인 유지 + 안정화된 렌더링 + 안전 분기점) =====
   async function generatePdfFromDoc(data) {
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
@@ -245,9 +280,9 @@
     wrap.style.position = 'absolute';
     wrap.style.left = '-9999px';
     wrap.style.top = '-9999px';
-    wrap.style.width = '794px';
+    wrap.style.width = '794px'; // A4 72DPI 기준 폭
     wrap.style.background = '#fff';
-    wrap.style.padding = '24px'; // 상단 살짝 당김
+    wrap.style.padding = '22px'; // 상단을 약간 더 당겨 여백 절감
     wrap.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif';
     wrap.style.color = '#111';
 
@@ -261,8 +296,8 @@
       </span>`;
 
     const headerHtml = `
-      <h2 style="margin:0 0 8px 0; font-size:24px; font-weight:800;">${title}</h2>
-      <div style="font-size:14px; margin:0 0 12px 0;">
+      <h2 style="margin:0 0 4px 0; font-size:24px; font-weight:800;">${title}</h2>
+      <div style="font-size:14px; margin:0 0 10px 0;">
         ${infoBox('이름', data.name)} ${infoBox('생년월일', data.birth)}
       </div>
     `;
@@ -272,7 +307,6 @@
     let bodyHtml = `<ol style="font-size:14px; line-height:1.7; padding-left:18px; margin:0;">`;
 
     if (data.type === '신입') {
-      // (간결 배치) 4번 항목 일부 라벨-우측 박스 배치, 6번 한 줄 표기
       bodyHtml += `
         <li style="margin-bottom:10px;">
           <strong>안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</strong>
@@ -383,9 +417,23 @@
 
     wrap.innerHTML = `${headerHtml}${bodyHtml}</ol><hr style="margin:10px 0;">${typeTable}`;
 
+    // DOM 붙여서 실제 크기 계산
     document.body.appendChild(wrap);
 
-    // ★ 안정화된 html2canvas 호출
+    // --- 안전 분기점 수집(제목, 각 문항, hr, 표의 '아래쪽' Y 축) ---
+    const wrapRect = wrap.getBoundingClientRect();
+    const collect = [];
+    const pushBottom = (el) => {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      collect.push(r.bottom - wrapRect.top);
+    };
+    pushBottom(wrap.querySelector('h2'));
+    wrap.querySelectorAll('ol > li').forEach(pushBottom);
+    pushBottom(wrap.querySelector('hr'));
+    pushBottom(wrap.querySelector('table'));
+
+    // html2canvas 렌더 (안정화)
     const scaleSafe = Math.min(1.6, window.devicePixelRatio || 1);
     const canvas = await html2canvas(wrap, {
       scale: scaleSafe,
@@ -394,10 +442,17 @@
       logging: false
     });
 
+    // DOM 제거
     document.body.removeChild(wrap);
 
-    // 멀티페이지 PDF 생성
-    return await _canvasToMultipagePdf(canvas);
+    // 분기점 좌표를 캔버스 px 스케일로 변환
+    const scaleCanvas = canvas.width / 794; // wrap.width(=794) → canvas.width
+    const guidesCanvasPx = collect
+      .map(px => Math.round(px * scaleCanvas))
+      .sort((a,b)=>a-b);
+
+    // 멀티페이지 생성(잘림 방지 + 빈 페이지 방지)
+    return await _canvasToMultipagePdfSmart(canvas, guidesCanvasPx);
   }
 
   function escapeHtml(s){
@@ -406,4 +461,3 @@
     }[m]));
   }
 })();
-
