@@ -188,9 +188,12 @@
     const innerHpt = pageH - margin * 2;
 
     const sliceHpxBase = Math.floor(innerHpt / scale); // 페이지 내부 높이(캔버스 px)
-    const overlapPxDefault = 6;                        // 페이지간 오버랩(캔버스 px)
-    const minChunk = 50;                               // 너무 작게 자르지 않기 위한 최소 높이(px)
-    const minRemainder = 10;                           // 마지막 남은 높이가 이보다 작으면 버림
+
+    // ★ 핵심 튜닝: 얇은 조각/빈 페이지 방지 임계값 강화
+    const overlapPxDefault = 6;   // 페이지 간 살짝 겹침
+    const MIN_CHUNK = 50;         // 한 페이지에 넣을 최소 조각(px) — 이보다 작으면 다음 가이드로 미룸
+    const MIN_REMAINDER = 32;     // 마지막 남은 높이가 이 이하면 아예 종료(빈페이지 방지)
+    const MIN_DRAW_PT = 6;        // 실제 그릴 높이가 6pt 미만이면 페이지 추가 자체를 스킵
 
     const tmp = document.createElement('canvas');
     const ctx = tmp.getContext('2d');
@@ -200,39 +203,37 @@
 
     while (y < canvas.height) {
       const remain = canvas.height - y;
-      if (remain <= minRemainder) break; // ★ 빈 페이지 방지
+      if (remain <= MIN_REMAINDER) break; // ★ 잔여가 너무 얇으면 그리지 않고 종료
 
-      // 기본적으로 한 페이지 높이만큼 자르되,
-      // 해당 범위 내에서 가장 가까운 안전 분기점(가이드)까지로 take 조정
-      const idealEnd = y + sliceHpxBase - 4; // 살짝 여유
+      // 기본 목표선
+      const idealEnd = y + sliceHpxBase - 4;
       let safeEnd = -1;
 
       if (Array.isArray(guidesCanvasPx) && guidesCanvasPx.length) {
-        // guides는 오름차순이라고 가정
-        // idealEnd 이하인 가장 큰 가이드를 찾음
+        // guides <= idealEnd 중 최댓값 이진탐색
         let lo = 0, hi = guidesCanvasPx.length - 1;
         while (lo <= hi) {
           const mid = (lo + hi) >> 1;
-          if (guidesCanvasPx[mid] <= idealEnd) {
-            safeEnd = guidesCanvasPx[mid];
-            lo = mid + 1;
-          } else hi = mid - 1;
+          if (guidesCanvasPx[mid] <= idealEnd) { safeEnd = guidesCanvasPx[mid]; lo = mid + 1; }
+          else hi = mid - 1;
         }
       }
 
       let take;
-      if (safeEnd > y && (safeEnd - y) >= minChunk) {
+      if (safeEnd > y && (safeEnd - y) >= MIN_CHUNK) {
         take = Math.min(safeEnd - y, remain);
       } else {
         take = Math.min(sliceHpxBase, remain);
       }
 
-      // 마지막 페이지로 거의 다 들어가면 한 번에 마무리해서 빈 페이지 방지
-      if (remain - take <= minRemainder) {
-        take = remain;
-      }
+      // 남은 것이 아주 작으면 한 번에 끝내기(별도 마지막 페이지 방지)
+      if (remain - take <= MIN_REMAINDER) take = remain;
 
-      // 실제 캔버스 조각 생성
+      // 그릴 조각이 너무 얇아 PDF 상 6pt 미만이면 페이지 추가 스킵
+      const drawHpt = Math.round(take * scale);
+      if (drawHpt < MIN_DRAW_PT) break; // 다음 루프 없이 종료 (빈페이지 생성 차단)
+
+      // 슬라이스 캔버스 생성
       tmp.width  = canvas.width;
       tmp.height = take;
       ctx.clearRect(0, 0, tmp.width, tmp.height);
@@ -246,11 +247,10 @@
       pdf.rect(0, 0, pageW, pageH, 'F');
 
       // 이미지 삽입(JPEG로 메모리 절약)
-      const drawH = Math.round(take * scale);
       const img   = tmp.toDataURL('image/jpeg', 0.9);
       pdf.addImage(img, 'JPEG',
         Math.round(margin), Math.round(margin),
-        Math.round(drawW), drawH
+        Math.round(drawW), drawHpt
       );
 
       // 페이지 외곽 프레임
@@ -261,7 +261,7 @@
       if (pdf.roundedRect) pdf.roundedRect(frameX, frameY, frameW, frameH, 8, 8);
       else pdf.rect(frameX, frameY, frameW, frameH);
 
-      // 다음 위치로
+      // 다음 위치 (겹침 보정)
       const overlapThis = (remain <= overlapPxDefault) ? 0 : overlapPxDefault;
       const advance = Math.max(1, take - overlapThis);
       y += advance;
@@ -282,7 +282,7 @@
     wrap.style.top = '-9999px';
     wrap.style.width = '794px'; // A4 72DPI 기준 폭
     wrap.style.background = '#fff';
-    wrap.style.padding = '22px'; // 상단을 약간 더 당겨 여백 절감
+    wrap.style.padding = '22px'; // 상단 여백 절감
     wrap.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif';
     wrap.style.color = '#111';
 
