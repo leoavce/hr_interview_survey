@@ -18,6 +18,9 @@
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
 
+  <!-- 🔒 비밀번호 잠금 스크립트 (main.js보다 먼저 로드) -->
+  <script defer src="js/lock.js"></script>
+
   <!-- 앱 초기화 및 기존 페이지 스크립트 (기능 유지) -->
   <script defer src="js/firebase-init.js"></script>
   <script defer src="js/main.js"></script>
@@ -125,7 +128,3 @@
   </script>
 </body>
 </html>
-
-
-
-
