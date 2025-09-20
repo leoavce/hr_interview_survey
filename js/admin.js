@@ -94,7 +94,7 @@
           const a = document.createElement('a');
           const url = URL.createObjectURL(blob);
           a.href = url;
-          a.download = `AhnLab_응답_${doc.type}_${doc.name}_${doc.birth}.pdf`;
+          a.download = `Company_응답_${doc.type}_${doc.name}_${doc.birth}.pdf`;
           document.body.appendChild(a);
           a.click();
           setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
@@ -112,10 +112,10 @@
   // ===== PDF 생성 도우미 =====
   function computeTypeScoresFromSelects(selects=[]) {
     const map = {
-      A:[1,7,9,13,17,24,26,32,33,39,41,48,50,53,57,63,65,70,74,79],
-      B:[2,8,10,14,18,23,25,30,34,37,42,47,51,55,58,62,66,69,75,77],
-      C:[4,5,12,16,19,22,27,29,36,38,43,46,49,56,59,64,68,72,76,80],
-      D:[3,6,11,15,20,21,28,31,35,40,44,45,52,54,60,61,67,71,73,78]
+      A:[직접입력필요],
+      B:[직접입력필요],
+      C:[직접입력필요],
+      D:[직접입력필요]
     };
     const scores = {A:0,B:0,C:0,D:0};
     selects.forEach((ans, i) => {
@@ -309,19 +309,19 @@
     if (data.type === '신입') {
       bodyHtml += `
         <li style="margin-bottom:10px;">
-          <strong>안랩에서 꿈꾸는 미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</strong>
+          <strong>미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.dream||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 최대 3가지(1가지여도 무방함) 소개해 주십시오.</strong>
+          <strong>본인이 다른 사람과 구별되는 장점이 있다면 최대 3가지(1가지여도 무방함) 소개해 주십시오.</strong>
           ${_bulletLine('①', (f.strengths||[])[0]||'')}
           ${_bulletLine('②', (f.strengths||[])[1]||'')}
           ${_bulletLine('③', (f.strengths||[])[2]||'')}
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>살아오면서 성취한 것 중 타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</strong>
+          <strong>타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</strong>
           ${_bulletLine('①', (f.achievements||[])[0]||'')}
           ${_bulletLine('②', (f.achievements||[])[1]||'')}
           ${_bulletLine('③', (f.achievements||[])[2]||'')}
@@ -346,8 +346,8 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+          <strong>다음 보기 중에서 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
+          <div style="margin:6px 0; font-size:13px;">보기) a, b, c, d, e, f</div>
           <div style="${ANSWER_BOX_STYLE}">
             ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;
             ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
@@ -355,7 +355,7 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>안랩 외에 현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</strong>
+          <strong>현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.otherOffers||'')}</div>
         </li>
 
@@ -397,8 +397,8 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) 업무 외 개인시간, 연봉, 승진(지위), 인간관계, 업무성취, 자기개발</div>
+          <strong>다음 보기 중에서 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
+          <div style="margin:6px 0; font-size:13px;">보기) a, b, c, d, e, f</div>
           <div style="${ANSWER_BOX_STYLE}">
             ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;
             ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
@@ -461,3 +461,4 @@
     }[m]));
   }
 })();
+
