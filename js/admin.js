@@ -1,4 +1,4 @@
-// js/admin.js
+// js/admin.js (포트폴리오 일반화 버전)
 (async function () {
   // Firebase 준비 확인
   if (!window.firebase || !window.auth || !window.db) {
@@ -94,7 +94,7 @@
           const a = document.createElement('a');
           const url = URL.createObjectURL(blob);
           a.href = url;
-          a.download = `Company_응답_${doc.type}_${doc.name}_${doc.birth}.pdf`;
+          a.download = `Portfolio_응답_${doc.type}_${doc.name || '이름없음'}_${doc.birth || '생년월일없음'}.pdf`;
           document.body.appendChild(a);
           a.click();
           setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
@@ -112,10 +112,10 @@
   // ===== PDF 생성 도우미 =====
   function computeTypeScoresFromSelects(selects=[]) {
     const map = {
-      A:[직접입력필요],
-      B:[직접입력필요],
-      C:[직접입력필요],
-      D:[직접입력필요]
+      A:[/* 직접입력필요 */],
+      B:[/* 직접입력필요 */],
+      C:[/* 직접입력필요 */],
+      D:[/* 직접입력필요 */]
     };
     const scores = {A:0,B:0,C:0,D:0};
     selects.forEach((ans, i) => {
@@ -133,7 +133,7 @@
           C = Number(scores?.C||0), D = Number(scores?.D||0);
     return `
       <div style="margin-top:8px;">
-        <div style="font-size:13px; margin-bottom:6px;">※ 선택형 설문 결과</div>
+        <div style="font-size:13px; margin-bottom:6px;">※ 선택형 설문 결과(포트폴리오)</div>
         <table style="width:100%; border-collapse:collapse; font-size:13px;">
           <thead>
             <tr>
@@ -160,7 +160,6 @@
   function _wrapTextHTML(txt='') {
     return `<div style="white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;">${escapeHtml(txt)}</div>`;
   }
-  // 답변 박스: 세로 간격 소폭 축소
   const ANSWER_BOX_STYLE =
     'margin-top:6px;padding:6px 8px;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;line-height:1.35;';
 
@@ -175,7 +174,7 @@
     `;
   }
 
-  // ===== 멀티페이지 PDF (안전 분기점 기반, 빈 페이지 방지) =====
+  // ===== 멀티페이지 PDF (안전 분기점 기반) =====
   async function _canvasToMultipagePdfSmart(canvas, guidesCanvasPx) {
     const { jsPDF } = window.jspdf;
     const pdf   = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
@@ -184,16 +183,15 @@
     const pageW    = Math.round(pdf.internal.pageSize.getWidth());
     const pageH    = Math.round(pdf.internal.pageSize.getHeight());
     const drawW    = pageW - margin * 2;
-    const scale    = drawW / canvas.width;  // canvas px → pt 변환 비율
+    const scale    = drawW / canvas.width;
     const innerHpt = pageH - margin * 2;
 
-    const sliceHpxBase = Math.floor(innerHpt / scale); // 페이지 내부 높이(캔버스 px)
+    const sliceHpxBase = Math.floor(innerHpt / scale);
 
-    // ★ 핵심 튜닝: 얇은 조각/빈 페이지 방지 임계값 강화
-    const overlapPxDefault = 6;   // 페이지 간 살짝 겹침
-    const MIN_CHUNK = 50;         // 한 페이지에 넣을 최소 조각(px) — 이보다 작으면 다음 가이드로 미룸
-    const MIN_REMAINDER = 32;     // 마지막 남은 높이가 이 이하면 아예 종료(빈페이지 방지)
-    const MIN_DRAW_PT = 6;        // 실제 그릴 높이가 6pt 미만이면 페이지 추가 자체를 스킵
+    const overlapPxDefault = 6;
+    const MIN_CHUNK = 50;
+    const MIN_REMAINDER = 32;
+    const MIN_DRAW_PT = 6;
 
     const tmp = document.createElement('canvas');
     const ctx = tmp.getContext('2d');
@@ -203,14 +201,12 @@
 
     while (y < canvas.height) {
       const remain = canvas.height - y;
-      if (remain <= MIN_REMAINDER) break; // ★ 잔여가 너무 얇으면 그리지 않고 종료
+      if (remain <= MIN_REMAINDER) break;
 
-      // 기본 목표선
       const idealEnd = y + sliceHpxBase - 4;
       let safeEnd = -1;
 
       if (Array.isArray(guidesCanvasPx) && guidesCanvasPx.length) {
-        // guides <= idealEnd 중 최댓값 이진탐색
         let lo = 0, hi = guidesCanvasPx.length - 1;
         while (lo <= hi) {
           const mid = (lo + hi) >> 1;
@@ -226,14 +222,11 @@
         take = Math.min(sliceHpxBase, remain);
       }
 
-      // 남은 것이 아주 작으면 한 번에 끝내기(별도 마지막 페이지 방지)
       if (remain - take <= MIN_REMAINDER) take = remain;
 
-      // 그릴 조각이 너무 얇아 PDF 상 6pt 미만이면 페이지 추가 스킵
       const drawHpt = Math.round(take * scale);
-      if (drawHpt < MIN_DRAW_PT) break; // 다음 루프 없이 종료 (빈페이지 생성 차단)
+      if (drawHpt < MIN_DRAW_PT) break;
 
-      // 슬라이스 캔버스 생성
       tmp.width  = canvas.width;
       tmp.height = take;
       ctx.clearRect(0, 0, tmp.width, tmp.height);
@@ -242,18 +235,15 @@
       if (!first) pdf.addPage();
       first = false;
 
-      // 배경 흰색
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, pageW, pageH, 'F');
 
-      // 이미지 삽입(JPEG로 메모리 절약)
       const img   = tmp.toDataURL('image/jpeg', 0.9);
       pdf.addImage(img, 'JPEG',
         Math.round(margin), Math.round(margin),
         Math.round(drawW), drawHpt
       );
 
-      // 페이지 외곽 프레임
       pdf.setLineWidth(1);
       pdf.setDrawColor(20);
       const frameX = margin - 6, frameY = margin - 6,
@@ -261,7 +251,6 @@
       if (pdf.roundedRect) pdf.roundedRect(frameX, frameY, frameW, frameH, 8, 8);
       else pdf.rect(frameX, frameY, frameW, frameH);
 
-      // 다음 위치 (겹침 보정)
       const overlapThis = (remain <= overlapPxDefault) ? 0 : overlapPxDefault;
       const advance = Math.max(1, take - overlapThis);
       y += advance;
@@ -270,7 +259,7 @@
     return pdf.output('blob');
   }
 
-  // ===== PDF 생성 (디자인 유지 + 안정화된 렌더링 + 안전 분기점) =====
+  // ===== PDF 생성 (일반화된 문구 적용) =====
   async function generatePdfFromDoc(data) {
     const scores = (data.typeScores && typeof data.typeScores === 'object')
       ? data.typeScores
@@ -280,16 +269,15 @@
     wrap.style.position = 'absolute';
     wrap.style.left = '-9999px';
     wrap.style.top = '-9999px';
-    wrap.style.width = '794px'; // A4 72DPI 기준 폭
+    wrap.style.width = '794px';
     wrap.style.background = '#fff';
-    wrap.style.padding = '22px'; // 상단 여백 절감
+    wrap.style.padding = '22px';
     wrap.style.fontFamily = '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif';
     wrap.style.color = '#111';
 
-    const title = (data.type === '신입') ? '신입사원  면접 사전 질문지' : '경력사원  면접 사전 질문지';
+    const title = (data.type === '신입') ? '사전 질문지(포트폴리오) — 신입' : '사전 질문지(포트폴리오) — 경력';
     const f = data.form || {};
 
-    // 이름/생년월일 작은 박스
     const infoBox = (label, value) =>
       `<span style="display:inline-block;border:1px solid #ccc;border-radius:6px;padding:4px 8px;margin-right:8px;">
         <strong>${label}:</strong> ${escapeHtml(value||'')}
@@ -309,45 +297,45 @@
     if (data.type === '신입') {
       bodyHtml += `
         <li style="margin-bottom:10px;">
-          <strong>미래 포부 (희망하는 역할/목표)에 대해서 말씀해 주십시오.</strong>
+          <strong>미래 포부(희망 역할/목표)</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.dream||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>본인이 다른 사람과 구별되는 장점이 있다면 최대 3가지(1가지여도 무방함) 소개해 주십시오.</strong>
+          <strong>강점/개성 (최대 3가지)</strong>
           ${_bulletLine('①', (f.strengths||[])[0]||'')}
           ${_bulletLine('②', (f.strengths||[])[1]||'')}
           ${_bulletLine('③', (f.strengths||[])[2]||'')}
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</strong>
+          <strong>자신 있게 제시할 경험/성과 (3가지)</strong>
           ${_bulletLine('①', (f.achievements||[])[0]||'')}
           ${_bulletLine('②', (f.achievements||[])[1]||'')}
           ${_bulletLine('③', (f.achievements||[])[2]||'')}
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>지원 직무(부문)에서 성과를 내기 위해 필요한 역량이 무엇이라고 생각하시는지 기술해 주십시오.</strong>
+          <strong>지원 직무 성과를 위한 핵심 역량</strong>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;flex-wrap:wrap;">
             <div style="flex:0 0 auto;margin-top:4px;">● 필요역량 :</div>
             <div style="flex:1;min-width:220px;${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.needed||'')}</div>
           </div>
-          <div style="margin-top:6px;">● 본인의 역량 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> 점 / 10점</div>
+          <div style="margin-top:6px;">● 본인의 보유 수준 : <strong>${Number(f.competency?.score||0)}</strong> 점 / 10점</div>
           <div style="display:flex;gap:8px;align-items:flex-start;margin-top:6px;flex-wrap:wrap;">
-            <div style="flex:0 0 auto;margin-top:4px;">● 필요 역량을 갖추기 위한 과정(노력) :</div>
+            <div style="flex:0 0 auto;margin-top:4px;">● 역량 개발 노력 :</div>
             <div style="flex:1;min-width:220px;${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.competency?.effort||'')}</div>
           </div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>타인이 인정(칭찬)하는 본인 성격(성향)상의 장점과 그 이유를 기술해주십시오.</strong>
+          <strong>주변이 말하는 성격(성향) 상의 장점</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.personalityStrength||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>다음 보기 중에서 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) a, b, c, d, e, f</div>
+          <strong>일에서 기대하는 가치 — 우선순위</strong>
+          <div style="margin:6px 0; font-size:13px;">예시) 성장, 보상, 안정, 영향력, 문화/동료, 워라밸</div>
           <div style="${ANSWER_BOX_STYLE}">
             ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;
             ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
@@ -355,24 +343,24 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</strong>
+          <strong>다른 지원 현황</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.otherOffers||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>희망연봉은?</strong>
+          <strong>희망 연봉</strong>
           <div style="${ANSWER_BOX_STYLE}">최저 ${Number(f.salary?.min||0)} (만원) ~ 최고 ${Number(f.salary?.max||0)} (만원)</div>
         </li>
       `;
     } else {
       bodyHtml += `
         <li style="margin-bottom:10px;">
-          <strong>직장생활에서의 성공에 대해서 정의해 보십시오.</strong>
+          <strong>‘일에서의 성공’에 대한 본인의 정의</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.successDef||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>본인 성격의 장/단점에 대해 각각 간략하게 기입해 주십시오.</strong>
+          <strong>성격 장/단점</strong>
           <div style="margin-top:6px;">#장점</div>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.pros||'')}</div>
           <div style="margin-top:6px;">#단점</div>
@@ -380,25 +368,25 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 세가지 정도 기입해 주십시오.</strong>
+          <strong>차별화된 강점 (3가지)</strong>
           ${_bulletLine('①', (f.strengths||[])[0]||'')}
           ${_bulletLine('②', (f.strengths||[])[1]||'')}
           ${_bulletLine('③', (f.strengths||[])[2]||'')}
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>나를 표현하는 단어 3가지를 기입해 주십시오.</strong>
+          <strong>나를 표현하는 단어 3가지</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.selfWords||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>가장 큰 성취를 했던 경험과 그 때 본인이 맡았던 역할을 기술해 주십시오.</strong>
+          <strong>가장 큰 성취와 역할</strong>
           <div style="${ANSWER_BOX_STYLE}">${_wrapTextHTML(f.bigAchievement||'')}</div>
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>다음 보기 중에서 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</strong>
-          <div style="margin:6px 0; font-size:13px;">보기) a, b, c, d, e, f</div>
+          <strong>일에서 중요하게 여기는 가치 — 우선순위</strong>
+          <div style="margin:6px 0; font-size:13px;">예시) 성장, 보상, 안정, 영향력, 문화/동료, 워라밸</div>
           <div style="${ANSWER_BOX_STYLE}">
             ① ${escapeHtml((f.expectations||[])[0]||'')} &nbsp; ② ${escapeHtml((f.expectations||[])[1]||'')} &nbsp; ③ ${escapeHtml((f.expectations||[])[2]||'')} &nbsp;
             ④ ${escapeHtml((f.expectations||[])[3]||'')} &nbsp; ⑤ ${escapeHtml((f.expectations||[])[4]||'')} &nbsp; ⑥ ${escapeHtml((f.expectations||[])[5]||'')}
@@ -406,10 +394,10 @@
         </li>
 
         <li style="margin-bottom:10px;">
-          <strong>연봉 정보를 기입해 주십시오.</strong>
+          <strong>연봉 정보</strong>
           <div style="${ANSWER_BOX_STYLE}">
             현재연봉: ${Number(f.salary?.now||0)} (만원) &nbsp; | &nbsp;
-            희망연봉: 최저 ${Number(f.salary?.min||0)} (만원) ~ 최고 ${Number(f.salary?.max||0)} (만원)
+            희망: 최저 ${Number(f.salary?.min||0)} (만원) ~ 최고 ${Number(f.salary?.max||0)} (만원)
           </div>
         </li>
       `;
@@ -417,10 +405,8 @@
 
     wrap.innerHTML = `${headerHtml}${bodyHtml}</ol><hr style="margin:10px 0;">${typeTable}`;
 
-    // DOM 붙여서 실제 크기 계산
     document.body.appendChild(wrap);
 
-    // --- 안전 분기점 수집(제목, 각 문항, hr, 표의 '아래쪽' Y 축) ---
     const wrapRect = wrap.getBoundingClientRect();
     const collect = [];
     const pushBottom = (el) => {
@@ -433,7 +419,6 @@
     pushBottom(wrap.querySelector('hr'));
     pushBottom(wrap.querySelector('table'));
 
-    // html2canvas 렌더 (안정화)
     const scaleSafe = Math.min(1.6, window.devicePixelRatio || 1);
     const canvas = await html2canvas(wrap, {
       scale: scaleSafe,
@@ -442,16 +427,13 @@
       logging: false
     });
 
-    // DOM 제거
     document.body.removeChild(wrap);
 
-    // 분기점 좌표를 캔버스 px 스케일로 변환
-    const scaleCanvas = canvas.width / 794; // wrap.width(=794) → canvas.width
+    const scaleCanvas = canvas.width / 794;
     const guidesCanvasPx = collect
       .map(px => Math.round(px * scaleCanvas))
       .sort((a,b)=>a-b);
 
-    // 멀티페이지 생성(잘림 방지 + 빈 페이지 방지)
     return await _canvasToMultipagePdfSmart(canvas, guidesCanvasPx);
   }
 
@@ -461,4 +443,3 @@
     }[m]));
   }
 })();
-
