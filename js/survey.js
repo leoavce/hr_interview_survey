@@ -1,4 +1,4 @@
-// js/survey.js
+// js/survey.js (포트폴리오 일반화 버전)
 (function () {
   const surveyForm   = document.getElementById('surveyForm');
   const titleEl      = document.getElementById('surveyTitle');
@@ -9,54 +9,121 @@
   const essaySection  = document.getElementById('essaySection');
   const choiceSection = document.getElementById('choiceSection');
 
-  // 세션에서 지원자 정보
-  const type  = sessionStorage.getItem('applyType'); // "신입" / "경력"
-  const name  = sessionStorage.getItem('applyName');
-  const birth = sessionStorage.getItem('appl표에 대해서 말씀해 주십시오.</label>
-        <textarea name="n_dream" required placeholder="목표를 구체적으로 기술해주세요"></textarea>
+  // 세션에서 지원자 정보 (포트폴리오 전용 키; 기존 키와 동일 사용)
+  const type  = sessionStorage.getItem('applyType')  || '경력'; // "신입" / "경력"
+  const name  = sessionStorage.getItem('applyName')  || '';
+  const birth = sessionStorage.getItem('applyBirth') || '';
+
+  // 상단 제목/지원자 정보 (일반화)
+  if (titleEl) {
+    titleEl.textContent = (type === '신입')
+      ? '사전 설문(포트폴리오) — 신입'
+      : '사전 설문(포트폴리오) — 경력';
+  }
+  if (infoEl) {
+    infoEl.innerHTML = `
+      <span class="badge">${type}</span>
+      <span class="muted">이름: ${escapeHtml(name || '미기입')}</span>
+      <span class="muted">생년월일: ${escapeHtml(birth || '미기입')}</span>
+    `;
+  }
+
+  // ===== 선택형 문항 페어 (디자인/개수 동일, 내용만 일반화) =====
+  // 기존 choicePairs 배열이 전역에 있다면 덮어씌우지 말고, 여기서 정의/사용하세요.
+  const choicePairs = (window.choicePairs && Array.isArray(window.choicePairs))
+    ? window.choicePairs
+    : [
+        ['새로운 도전을 선호한다', '정해진 절차를 선호한다'],
+        ['개인 성과에 동기부여된다', '팀 성과에 동기부여된다'],
+        ['빠른 실행이 중요하다', '완벽한 준비가 중요하다'],
+        ['수치 기반 의사결정을 선호한다', '정성적 판단을 선호한다'],
+        ['리스크를 감수한다', '리스크를 회피한다'],
+        ['즉각적인 피드백을 선호한다', '주기적/정기 피드백을 선호한다'],
+        ['주도적으로 일한다', '조율하며 일한다'],
+        ['디테일에 강하다', '큰 그림에 강하다'],
+        ['독립적 업무를 선호한다', '협업을 선호한다'],
+        ['규모 확장에 관심이 많다', '안정적 운영에 관심이 많다'],
+        // 10쌍 * 4 = 40문항 유지
+        ['표준화를 중시한다', '유연성을 중시한다'],
+        ['데이터 분석을 즐긴다', '사람과의 인터랙션을 즐긴다'],
+        ['결과를 우선시한다', '과정을 우선시한다'],
+        ['의사결정 속도가 빠르다', '충분한 합의를 거친다'],
+        ['실험을 즐긴다', '재현 가능성을 중시한다'],
+        ['새 도구 시도를 즐긴다', '검증된 도구를 선호한다'],
+        ['정량 목표를 선호한다', '정성 목표를 선호한다'],
+        ['과감한 목표 설정', '현실적 목표 설정'],
+        ['개인 학습에 투자', '조직 학습에 투자'],
+        ['성과지표 고도화', '프로세스 개선'],
+        ['고객 가치 우선', '내부 효율 우선'],
+        ['문서화 철저', '구두 커뮤니케이션 원활'],
+        ['리더십 발휘', '팔로워십 발휘'],
+        ['멀티태스킹 선호', '싱글태스킹 선호'],
+        ['전체 일정 관리', '세부 일정 관리'],
+        ['의견을 먼저 제시', '경청을 먼저 수행'],
+        ['명확한 규칙 선호', '자율과 책임 선호'],
+        ['직접 해결 선호', '위임/조정 선호'],
+        ['고객지향 강함', '제품지향 강함'],
+        ['문제 원인 탐색', '해결책 디자인'],
+        ['주요 지표 추적', '가설 검증 반복'],
+        ['커뮤니티 활동 활발', '깊이 있는 연구 선호'],
+        ['크로스펑셔널 선호', '전문화된 영역 선호'],
+        ['신속한 MVP', '탄탄한 V1'],
+        ['속도 우선', '품질 우선'],
+        ['아이디어 다작', '선별과 집중'],
+        ['표준 프로세스 준수', '케이스별 최적화'],
+        ['성장/커리어', '보상/안정'],
+        ['영향력/임팩트', '워크라이프 밸런스'],
+        ['내부고객 만족', '외부고객 만족']
+      ];
+
+  function renderEssaysForNew() {
+    essaySection.innerHTML = `
+      <div class="q">
+        <label class="q-label">1. 미래 포부(희망하는 역할/목표)를 말씀해 주세요.</label>
+        <textarea name="n_dream" required placeholder="3~5년 내 이루고 싶은 목표와 그 이유를 구체적으로 적어주세요."></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">2. 본인의 개성에 대해 소개해 주십시오.</label>
+        <label class="q-label">2. 본인의 강점/개성을 소개해 주세요.</label>
         <div class="grid-1">
-          <textarea name="n_strength1" required placeholder="개성 첫 번째"></textarea>
-          <textarea name="n_strength2" placeholder="개성 두 번째 (선택사항)"></textarea>
-          <textarea name="n_strength3" placeholder="개성성 세 번째 (선택사항)"></textarea>
+          <textarea name="n_strength1" required placeholder="핵심 강점 1"></textarea>
+          <textarea name="n_strength2" placeholder="(선택) 강점 2"></textarea>
+          <textarea name="n_strength3" placeholder="(선택) 강점 3"></textarea>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">3. 타인에게 자랑할 만한 것을 3가지 소개해 주십시오.</label>
+        <label class="q-label">3. 자신 있게 보여줄 수 있는 경험/성과 3가지를 적어 주세요.</label>
         <div class="grid-1">
-          <textarea name="n_ach1" required placeholder="자랑할 만한 것 첫 번째"></textarea>
-          <textarea name="n_ach2" required placeholder="자랑할 만한 것 두 번째"></textarea>
-          <textarea name="n_ach3" required placeholder="자랑할 만한 것 세 번째"></textarea>
+          <textarea name="n_ach1" required placeholder="경험/성과 1 (상황-행동-결과)"></textarea>
+          <textarea name="n_ach2" required placeholder="경험/성과 2 (상황-행동-결과)"></textarea>
+          <textarea name="n_ach3" required placeholder="경험/성과 3 (상황-행동-결과)"></textarea>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">4. 지원 직무(부문)에서 성과를 내기 위해 필요한 역량이 무엇이라고 생각하시는지 기술해 주십시오.</label>
-        <textarea name="n_comp_needed" required placeholder="필요한 역량을 구체적으로 기술해주세요"></textarea>
+        <label class="q-label">4. 지원 직무에서 성과를 내기 위해 필요한 역량은 무엇인가요?</label>
+        <textarea name="n_comp_needed" required placeholder="핵심 역량을 구체적으로 기술 (예: 문제해결, 커뮤니케이션, 데이터 해석 등)"></textarea>
 
         <div style="margin-top:10px;">
-          <label class="q-label">본인의 역량 보유 수준 (10점 만점)</label>
+          <label class="q-label">현재 본인의 해당 역량 보유 수준 (10점 만점)</label>
           <input type="number" min="0" max="10" step="1" name="n_comp_score" required placeholder="0~10" style="width:120px;">
         </div>
 
         <div style="margin-top:10px;">
-          <label class="q-label">필요 역량을 갖추기 위해 어떤 과정(노력)을 통해 역량을 갖춰왔는지 Key Word 중심 설명</label>
-          <textarea name="n_comp_effort" required placeholder="역량 개발 과정을 키워드 중심으로 설명해주세요"></textarea>
+          <label class="q-label">해당 역량을 키우기 위해 어떤 노력을 했나요? (키워드 중심)</label>
+          <textarea name="n_comp_effort" required placeholder="예: 온라인 강의 수강, 프로젝트 참여, 멘토링, 독서 등"></textarea>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">5. 타인이 인정(칭찬)하는 본인 성격(성향)상의 장점과 그 이유를 기술해주십시오.</label>
-        <textarea name="n_personality_strength" required placeholder="타인이 인정하는 성격상 장점과 이유를 구체적으로 기술해주세요"></textarea>
+        <label class="q-label">5. 주변에서 자주 듣는 성격(성향)상의 장점과 그 이유는 무엇인가요?</label>
+        <textarea name="n_personality_strength" required placeholder="구체적인 사례와 함께 적어주세요."></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">6. 다음 보기 중에서 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</label>
-        <div class="info">보기) a, b, c d, e, f</div>
+        <label class="q-label">6. 일을 통해 기대하는 가치를 중요한 순서대로 적어 주세요.</label>
+        <div class="info">예시) 성장, 보상, 안정, 영향력, 문화/동료, 워라밸</div>
         <div class="grid-3">
           <input name="n_expect1" required placeholder="1순위">
           <input name="n_expect2" required placeholder="2순위">
@@ -68,12 +135,12 @@
       </div>
 
       <div class="q">
-        <label class="q-label">7. 현재 최종면접이 진행중이거나 합격한 회사가 있습니까?</label>
-        <textarea name="n_otheroffers" required placeholder="예: A사 최종합격, B사 2차면접 진행 중 등 (없으면 '없음')"></textarea>
+        <label class="q-label">7. 현재 진행 중인 다른 지원 현황이 있나요?</label>
+        <textarea name="n_otheroffers" required placeholder="예: X사 최종합격, Y사 2차면접 진행 중 (없으면 '없음')"></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">8. 희망연봉은?</label>
+        <label class="q-label">8. 희망 연봉 범위를 기입해 주세요.</label>
         <div class="salary-inline-new">
           <span class="label">최저</span>
           <input type="number" name="n_salary_min" required placeholder="0">
@@ -89,38 +156,38 @@
   function renderEssaysForExp() {
     essaySection.innerHTML = `
       <div class="q">
-        <label class="q-label">1. 직장생활에서의 성공에 대해서 정의해 보십시오.</label>
-        <textarea name="e_success" required placeholder="직장생활에서의 성공에 대한 정의를 입력해주세요"></textarea>
+        <label class="q-label">1. 귀하가 정의하는 ‘일에서의 성공’은 무엇인가요?</label>
+        <textarea name="e_success" required placeholder="본인의 성공 정의와 그 배경을 적어주세요."></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">2. 본인 성격의 장/단점에 대해 각각 간략하게 기입해 주십시오.</label>
-        <textarea name="e_pros" required placeholder="#장점 - 내용을 입력해주세요"></textarea>
-        <textarea name="e_cons" required placeholder="#단점 - 내용을 입력해주세요" style="margin-top:8px;"></textarea>
+        <label class="q-label">2. 본인의 성격적 장점/단점을 간단히 기술해 주세요.</label>
+        <textarea name="e_pros" required placeholder="#장점 - 강점과 발휘 사례"></textarea>
+        <textarea name="e_cons" required placeholder="#단점 - 보완점과 개선 노력" style="margin-top:8px;"></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">3. 본인이 다른 사람과 구별되는 특별히 뛰어난 점이 있다면 세가지 정도 기입해 주십시오.</label>
+        <label class="q-label">3. 타인과 구별되는 강점을 3가지 적어 주세요.</label>
         <div class="grid-1">
-          <textarea name="e_strength1" required placeholder="1.뛰어난 점 첫 번째"></textarea>
-          <textarea name="e_strength2" required placeholder="2.뛰어난 점 두 번째"></textarea>
-          <textarea name="e_strength3" required placeholder="3.뛰어난 점 세 번째"></textarea>
+          <textarea name="e_strength1" required placeholder="강점 1 (근거 포함)"></textarea>
+          <textarea name="e_strength2" required placeholder="강점 2 (근거 포함)"></textarea>
+          <textarea name="e_strength3" required placeholder="강점 3 (근거 포함)"></textarea>
         </div>
       </div>
 
       <div class="q">
-        <label class="q-label">4. 나를 표현하는 단어 3가지를 기입해 주십시오.</label>
-        <textarea name="e_words" required placeholder="나를 표현하는 단어 3가지를 간략히 입력해주세요"></textarea>
+        <label class="q-label">4. 나를 표현하는 단어 3가지</label>
+        <textarea name="e_words" required placeholder="예: 데이터드리븐, 책임감, 협업지향"></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">5. 가장 큰 성취를 했던 경험과 그 때 본인이 맡았던 역할을 기술해 주십시오.</label>
-        <textarea name="e_bigach" required placeholder="성취 경험과 역할을 구체적으로 기술해주세요"></textarea>
+        <label class="q-label">5. 가장 큰 성취 경험과 맡았던 역할을 기술해 주세요.</label>
+        <textarea name="e_bigach" required placeholder="상황(S)-과제(T)-행동(A)-결과(R) 구조로 작성"></textarea>
       </div>
 
       <div class="q">
-        <label class="q-label">6. 다음 보기 중에서 안랩 근무를 통해서 기대하는 것을 중요한 순서대로 나열해 주십시오.</label>
-        <div class="info">보기) a, b, c, d, e, f</div>
+        <label class="q-label">6. 일에서 가장 중요하게 여기는 가치를 순서대로 적어 주세요.</label>
+        <div class="info">예시) 성장, 보상, 안정, 영향력, 문화/동료, 워라밸</div>
         <div class="grid-3">
           <input name="e_expect1" required placeholder="1순위">
           <input name="e_expect2" required placeholder="2순위">
@@ -132,16 +199,16 @@
       </div>
 
       <div class="q">
-        <label class="q-label">7. 연봉 정보를 기입해 주십시오.</label>
+        <label class="q-label">7. 연봉 정보를 기입해 주세요.</label>
         <div class="grid-1">
           <div>
-            <span>현재연봉은? (기본급)</span>
+            <span>현재 연봉(기본급)</span>
             <div style="margin-top:6px;">
               <input type="number" name="e_salary_now" required placeholder="0" class="salary-input"> (만원)
             </div>
           </div>
           <div style="margin-top:8px;">
-            <span>희망연봉은?</span>
+            <span>희망 연봉</span>
             <div class="salary-inputs">
               <span class="muted">최저</span>
               <input type="number" name="e_salary_min" required placeholder="0" class="salary-input">
@@ -178,13 +245,13 @@
     `;
   }).join('');
 
-  // ========= 분류 로직 (직접 입력 요망) =========
+  // ========= 분류 로직 (직접 입력 요망: 포트폴리오용 더미 맵) =========
   function getTypeScores(surveyAnswers) {
     const typeQuestions = {
-      "A": [직접입력필요],
-      "B": [직접입력필요],
-      "C": [직접입력필요],
-      "D": [직접입력필요]
+      "A": [/* 직접입력필요: 예) 1,5,9,... */],
+      "B": [/* 직접입력필요 */],
+      "C": [/* 직접입력필요 */],
+      "D": [/* 직접입력필요 */]
     };
     const scores = {A:0,B:0,C:0,D:0};
     surveyAnswers.forEach((ans, i) => {
@@ -220,7 +287,7 @@
     try {
       await ensureFirebaseReady();
 
-      // (A) 공통 강제 검증: required 붙은 모든 필드 확인 (서술형 포함)
+      // (A) 공통 강제 검증
       const requiredFields = surveyForm.querySelectorAll('input[required], textarea[required], select[required]');
       for (const field of requiredFields) {
         const val = (field.value || '').toString().trim();
@@ -233,7 +300,7 @@
         }
       }
 
-      // (B) 선택형 40문항 수집(미선택시 명확히 문항 번호 안내)
+      // (B) 선택형 40문항 수집
       const selects = [];
       for (let i = 0; i < 40; i++) {
         const node = surveyForm[`select${i+1}`];      // RadioNodeList
@@ -244,7 +311,7 @@
         selects.push(parseInt(sel, 10));
       }
 
-      // (C) 서술형(구조화) 수집 (원본 로직 유지)
+      // (C) 서술형(구조화) 수집
       let form = {};
       if (type === '신입') {
         form = {
@@ -310,7 +377,7 @@
       // (D) 분류
       const result = classifyType(selects);
 
-      // (E) 저장 데이터(기존 필드 유지 + form 추가)
+      // (E) 저장 데이터
       const docData = {
         type,
         name,
@@ -318,7 +385,7 @@
         selects,
         resultType: result.label,
         typeScores: result.scores,
-        form,                         // 새 구조화 필드
+        form,
         date: new Date().toISOString()
       };
 
@@ -332,7 +399,6 @@
       console.error(err);
       errorEl.textContent = '제출 중 오류가 발생했습니다: ' + (err.message || err);
       errorEl.style.display = 'block';
-      // 에러 위치로 스크롤(가능하면)
       const firstInvalid = surveyForm.querySelector(':invalid') || surveyForm.querySelector('input[required],textarea[required]');
       if (firstInvalid) {
         firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -343,6 +409,10 @@
       submitBtn.textContent = '설문 제출';
     }
   });
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g,(m)=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[m]));
+  }
 })();
-
-
